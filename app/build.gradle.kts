@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.ksp)
     alias(libs.plugins.parcelize)
+    alias(libs.plugins.firebase)
 }
 
 android {
@@ -86,4 +87,6 @@ dependencies {
     implementation(libs.retorfit.core)
     implementation(libs.retorfit.gsonConverter)
     implementation(libs.icons)
+
+    implementation(platform(libs.firebase.bom))
 }
