@@ -1,6 +1,8 @@
-package com.way_torg.myapplication.domain.entity
+package com.way_torg.myapplication.data.dto
 
-data class Product(
+import com.way_torg.myapplication.domain.entity.Category
+
+data class ProductDto(
     val id: String,
     val name: String,
     val category: Category,
