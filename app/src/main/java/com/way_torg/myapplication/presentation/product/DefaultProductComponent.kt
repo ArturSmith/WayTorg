@@ -1,8 +1,11 @@
 package com.way_torg.myapplication.presentation.product
 
+import com.arkivanov.decompose.ComponentContext
 import kotlinx.coroutines.flow.StateFlow
 
-class DefaultProductComponent : ProductComponent {
+class DefaultProductComponent(
+    componentContext: ComponentContext
+) : ProductComponent, ComponentContext by componentContext {
     override val model: StateFlow<Any>
         get() = TODO("Not yet implemented")
 

@@ -1,8 +1,13 @@
 package com.way_torg.myapplication.presentation.create_product
 
+import com.arkivanov.decompose.ComponentContext
 import kotlinx.coroutines.flow.StateFlow
 
-class DefaultCreateProductComponent : CreateProductComponent{
+class DefaultCreateProductComponent(
+    componentContext: ComponentContext,
+    private val onProductSaved: () -> Unit,
+    val onClickBack: () -> Unit,
+) : CreateProductComponent, ComponentContext by componentContext {
     override val model: StateFlow<Any>
         get() = TODO("Not yet implemented")
 
@@ -35,7 +40,7 @@ class DefaultCreateProductComponent : CreateProductComponent{
     }
 
     override fun onClickBack() {
-        TODO("Not yet implemented")
+        onClickBack.invoke()
     }
 
     override fun onClickCreate() {
