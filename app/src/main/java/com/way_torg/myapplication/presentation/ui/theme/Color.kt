@@ -1,4 +1,4 @@
-package com.way_torg.myapplication.ui.theme
+package com.way_torg.myapplication.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

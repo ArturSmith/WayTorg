@@ -1,4 +1,4 @@
-package com.way_torg.myapplication.ui.theme
+package com.way_torg.myapplication.presentation.ui.theme
 
 import android.app.Activity
 import android.os.Build
