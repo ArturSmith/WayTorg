@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "232069204746",
+    "project_id": "way-torg",
+    "storage_bucket": "way-torg.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:232069204746:android:4d981e98f468cdcd4d08f3",
+        "android_client_info": {
+          "package_name": "com.way_torg.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmyMv6BfB4HDsWWYHf8Bu_rsNP3sCKK-4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
