@@ -89,4 +89,6 @@ dependencies {
     implementation(libs.icons)
 
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firestore)
+    implementation(libs.storage)
 }
