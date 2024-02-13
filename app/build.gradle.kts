@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.retorfit.core)
     implementation(libs.retorfit.gsonConverter)
     implementation(libs.icons)
+    implementation(libs.coil)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firestore)
