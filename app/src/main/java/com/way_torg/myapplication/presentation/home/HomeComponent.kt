@@ -5,7 +5,7 @@ import com.way_torg.myapplication.domain.entity.Product
 import kotlinx.coroutines.flow.StateFlow
 
 interface HomeComponent {
-    val model: StateFlow<Any>
+    val model: StateFlow<HomeStore.State>
 
     fun onClickProduct(product: Product)
     fun onClickBasket()

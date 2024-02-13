@@ -1,39 +1,98 @@
 package com.way_torg.myapplication.presentation.home
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.instancekeeper.InstanceKeeper
+import com.arkivanov.essenty.instancekeeper.getOrCreate
+import com.arkivanov.mvikotlin.core.instancekeeper.getStore
+import com.arkivanov.mvikotlin.extensions.coroutines.labels
+import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.way_torg.myapplication.domain.entity.Filter
 import com.way_torg.myapplication.domain.entity.Product
+import com.way_torg.myapplication.extensions.componentScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class DefaultHomeComponent(
-    componentContext: ComponentContext,
-    private val onClickCreateProduct: () -> Unit,
-    private val onClickChat: () -> Unit,
-    private val onClickProduct: (product:Product) -> Unit,
-    private val onClickBasket: () -> Unit,
+class DefaultHomeComponent @AssistedInject constructor(
+    private val storeFactory: HomeStoreFactory,
+    @Assisted("componentContext") private val componentContext: ComponentContext,
+    @Assisted("onClickCreateProduct") private val onClickCreateProduct: () -> Unit,
+    @Assisted("onClickChat") private val onClickChat: () -> Unit,
+    @Assisted("onClickProduct") private val onClickProduct: (product: Product) -> Unit,
+    @Assisted("onClickBasket") private val onClickBasket: () -> Unit
 ) : HomeComponent, ComponentContext by componentContext {
-    override val model: StateFlow<Any>
-        get() = TODO("Not yet implemented")
+
+
+    private val store = instanceKeeper.getStore { storeFactory.create() }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val model: StateFlow<HomeStore.State>
+        get() = store.stateFlow
+
+    init {
+        componentScope().launch {
+            store.labels.collect {
+                when (it) {
+                    HomeStore.Label.OnClickBasket -> {
+                        onClickBasket.invoke()
+                    }
+
+                    HomeStore.Label.OnClickChat -> {
+                        onClickChat.invoke()
+                    }
+
+                    HomeStore.Label.OnClickCreateProduct -> {
+                        onClickCreateProduct.invoke()
+                    }
+
+                    is HomeStore.Label.OnClickProduct -> {
+                        onClickProduct.invoke(it.product)
+                    }
+                }
+            }
+        }
+    }
+
 
     override fun onClickProduct(product: Product) {
-        onClickProduct.invoke(product)
+        store.accept(HomeStore.Intent.OnClickProduct(product))
     }
 
     override fun onClickBasket() {
-        onClickBasket.invoke()
+
+        store.accept(HomeStore.Intent.OnClickBasket)
     }
 
     override fun onClickChat() {
-        onClickChat.invoke()
+        store.accept(HomeStore.Intent.OnClickChat)
     }
 
     override fun onClickCreateProduct() {
-        onClickCreateProduct.invoke()
+        store.accept(HomeStore.Intent.OnClickCreateProduct)
     }
 
     override fun onClickChangeFilterState(filter: Filter) {
+        store.accept(HomeStore.Intent.OnClickChangeFilterState(filter))
     }
 
     override fun onClickAddToBasket(product: Product) {
+        store.accept(HomeStore.Intent.OnClickAddToBasket(product))
+    }
+
+    @AssistedFactory
+    interface  Factory {
+        fun create(
+            @Assisted("componentContext") componentContext: ComponentContext,
+            @Assisted("onClickCreateProduct")  onClickCreateProduct: () -> Unit,
+            @Assisted("onClickChat")  onClickChat: () -> Unit,
+            @Assisted("onClickProduct")  onClickProduct: (product: Product) -> Unit,
+            @Assisted("onClickBasket")  onClickBasket: () -> Unit
+        ) : DefaultHomeComponent
     }
 }
