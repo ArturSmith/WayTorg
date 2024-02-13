@@ -8,32 +8,40 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
+import com.way_torg.myapplication.presentation.create_product.CreateProductStoreFactory
 import com.way_torg.myapplication.presentation.create_product.DefaultCreateProductComponent
 import com.way_torg.myapplication.presentation.home.DefaultHomeComponent
+import com.way_torg.myapplication.presentation.home.HomeComponent
+import com.way_torg.myapplication.presentation.home.HomeStoreFactory
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.android.parcel.Parcelize
 
-class DefaultRootComponent(
-    componentContext: ComponentContext
+class DefaultRootComponent @AssistedInject constructor(
+    private val homeComponentFactory: DefaultHomeComponent.Factory,
+    private val createProductStoreFactory: DefaultCreateProductComponent.Factory,
+    @Assisted("componentContext") componentContext: ComponentContext
 ) : RootComponent, ComponentContext by componentContext {
 
     private val navigation = StackNavigation<Config>()
 
-    val stack: Value<ChildStack<Config, RootComponent.Child>> = childStack(
+    override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
         initialConfiguration = Config.Home,
         handleBackButton = true,
         childFactory = ::child
     )
 
-    fun child(config: Config, componentContext: ComponentContext): RootComponent.Child {
+    private fun child(config: Config, componentContext: ComponentContext): RootComponent.Child {
         return when (config) {
             Config.CreateProduct -> {
-                val component = DefaultCreateProductComponent(
+                val component = createProductStoreFactory.create(
                     componentContext = componentContext,
-                    onProductSaved = {
+                    onClickBack = {
                         navigation.pop()
                     },
-                    onClickBack = {
+                    onProductSaved = {
                         navigation.pop()
                     }
                 )
@@ -41,14 +49,14 @@ class DefaultRootComponent(
             }
 
             Config.Home -> {
-                val component = DefaultHomeComponent(
+                val component = homeComponentFactory.create(
                     componentContext = componentContext,
                     onClickCreateProduct = {
                         navigation.push(Config.CreateProduct)
                     },
-                    onClickBasket = {},
+                    onClickProduct = {},
                     onClickChat = {},
-                    onClickProduct = {}
+                    onClickBasket = {}
                 )
                 RootComponent.Child.Home(component = component)
             }
@@ -56,11 +64,18 @@ class DefaultRootComponent(
     }
 
     @Parcelize
-    sealed interface Config : Parcelable {
+    private sealed interface Config : Parcelable {
         @Parcelize
         data object Home : Config
 
         @Parcelize
         data object CreateProduct : Config
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("componentContext") componentContext: ComponentContext
+        ): DefaultRootComponent
     }
 }
