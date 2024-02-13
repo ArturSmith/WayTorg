@@ -13,4 +13,6 @@
     <string name="left_in_stock">Left</string>
     <string name="add_to_basket">Add to basket</string>
     <string name="rating">Rating</string>
+    <string name="no_selected_pictures">Do not have any selected pictures</string>
+    <string name="long_click_to_delete_pic">Long click to delete picture</string>
 </resources>
