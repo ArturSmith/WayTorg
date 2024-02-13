@@ -1,17 +1,31 @@
 package com.way_torg.myapplication.presentation.create_product
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -26,19 +40,27 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.way_torg.myapplication.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun CreateProductContent(
     component: CreateProductComponent
 ) {
+    val model by component.model.collectAsState()
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -63,55 +85,129 @@ fun CreateProductContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 OutlinedTextField(
-                    value = "",
+                    value = model.name,
                     placeholder = { Text(stringResource(R.string.name)) },
-                    onValueChange = {}
+                    onValueChange = {
+                        component.onSetName(it)
+                    }
                 )
+//                OutlinedTextField(
+//                    value = model.category,
+//                    placeholder = { Text(stringResource(R.string.category)) },
+//                    onValueChange = {
+//                        component.onSetCategory()
+//                    }
+//                )
                 OutlinedTextField(
-                    value = "",
-                    placeholder = { Text(stringResource(R.string.category)) },
-                    onValueChange = {}
-                )
-                OutlinedTextField(
-                    value = "",
+                    value = model.description,
                     placeholder = { Text(stringResource(R.string.description)) },
-                    onValueChange = {},
+                    onValueChange = {
+                        component.onSetDescription(it)
+                    },
                     modifier = Modifier.height(150.dp)
                 )
                 OutlinedTextField(
-                    value = "",
+                    value = model.count,
                     placeholder = { Text(stringResource(R.string.count)) },
-                    onValueChange = {}
+                    onValueChange = {
+                        component.onSetCount(it)
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
                 OutlinedTextField(
-                    value = "",
+                    value = model.price,
                     placeholder = { Text(stringResource(R.string.price)) },
-                    onValueChange = {}
+                    onValueChange = {
+                        component.onSetPrice(it)
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
                 OutlinedTextField(
-                    value = "",
+                    value = model.discount,
                     placeholder = { Text(stringResource(R.string.discount)) },
-                    onValueChange = {}
+                    onValueChange = {
+                        component.onSetDiscount(it)
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
-                Box(
-                    modifier = Modifier
-                        .border(
-                            border = BorderStroke(width = 1.dp, color = Color.Black),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .size(width = TextFieldDefaults.MinWidth, height = 100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Image, contentDescription = null)
+                if (model.pictures.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.long_click_to_delete_pic),
+                        textAlign = TextAlign.Center,
+                        fontSize = 18.sp,
+                        color = Color.Gray
+                    )
+                    LazyRow(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(
+                            items = model.pictures
+                        ) {
+                            AsyncImage(
+                                model = it,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(200.dp).combinedClickable(
+                                    onClick = {},
+                                    onLongClick = {
+                                        component.onLongClickToPicture(it)
+                                    }
+                                )
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        stringResource(R.string.no_selected_pictures),
+                        textAlign = TextAlign.Center,
+                        fontSize = 18.sp,
+                        color = Color.Gray
+                    )
+                }
+                TakePicturesFromGalery {
+                    component.onClickAddPictures(it)
                 }
                 Spacer(Modifier.weight(1f))
                 OutlinedButton(
-                    onClick = {},
+                    onClick = {
+                        component.onClickCreate()
+                    },
                 ) {
                     Text(stringResource(R.string.create), color = Color.Black)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
             }
         }
+    }
+}
+
+
+@Composable
+private fun TakePicturesFromGalery(onSetPictures: (pictures: List<Uri>) -> Unit) {
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia()
+    ) {
+        onSetPictures(it)
+    }
+    Box(
+        modifier = Modifier
+            .border(
+                border = BorderStroke(width = 1.dp, color = Color.Black),
+                shape = RoundedCornerShape(4.dp)
+            )
+            .size(width = TextFieldDefaults.MinWidth, height = 100.dp)
+            .clickable {
+                launcher.launch(PickVisualMediaRequest())
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(Icons.Default.Image, contentDescription = null)
     }
 }

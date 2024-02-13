@@ -1,49 +1,96 @@
 package com.way_torg.myapplication.presentation.create_product
 
+import android.net.Uri
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.mvikotlin.core.instancekeeper.getStore
+import com.arkivanov.mvikotlin.extensions.coroutines.labels
+import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.way_torg.myapplication.domain.entity.Category
+import com.way_torg.myapplication.extensions.componentScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class DefaultCreateProductComponent(
-    componentContext: ComponentContext,
-    private val onProductSaved: () -> Unit,
-    val onClickBack: () -> Unit,
+class DefaultCreateProductComponent @AssistedInject constructor(
+     private val storeFactory: CreateProductStoreFactory,
+     @Assisted("componentContext") componentContext: ComponentContext,
+     @Assisted("onProductSaved") private val onProductSaved: () -> Unit,
+     @Assisted("onClickBack") private val onClickBack: () -> Unit,
 ) : CreateProductComponent, ComponentContext by componentContext {
-    override val model: StateFlow<Any>
-        get() = TODO("Not yet implemented")
 
-    override fun onClickSetName() {
-        TODO("Not yet implemented")
+    private val store = instanceKeeper.getStore {storeFactory.create()}
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val model: StateFlow<CreateProductStore.State> = store.stateFlow
+
+    init {
+        componentScope().launch {
+            store.labels.collect {
+                when (it) {
+                    CreateProductStore.Label.OnClickBack -> {
+                        onClickBack.invoke()
+                    }
+
+                    CreateProductStore.Label.OnClickCreate -> {
+                        onProductSaved.invoke()
+                    }
+                }
+            }
+        }
     }
 
-    override fun onClickSetCategory() {
-        TODO("Not yet implemented")
+    override fun onSetName(name: String) {
+        store.accept(CreateProductStore.Intent.OnSetName(name))
     }
 
-    override fun onClickSetCount() {
-        TODO("Not yet implemented")
+    override fun onSetCategory(category: Category) {
+        store.accept(CreateProductStore.Intent.OnSetCategory(category))
     }
 
-    override fun onClickSetDescription() {
-        TODO("Not yet implemented")
+    override fun onSetCount(count: String) {
+        store.accept(CreateProductStore.Intent.OnSetCount(count))
     }
 
-    override fun onClickSetPrice() {
-        TODO("Not yet implemented")
+    override fun onSetDescription(description: String) {
+        store.accept(CreateProductStore.Intent.OnSetDescription(description))
     }
 
-    override fun onClickSetDiscount() {
-        TODO("Not yet implemented")
+    override fun onSetPrice(price: String) {
+        store.accept(CreateProductStore.Intent.OnSetPrice(price))
     }
 
-    override fun onClickAddPictures() {
-        TODO("Not yet implemented")
+    override fun onSetDiscount(discount: String) {
+        store.accept(CreateProductStore.Intent.OnSetDiscount(discount))
+    }
+
+    override fun onClickAddPictures(pictures: List<Uri>) {
+        store.accept(CreateProductStore.Intent.OnClickAddPictures(pictures))
     }
 
     override fun onClickBack() {
-        onClickBack.invoke()
+        store.accept(CreateProductStore.Intent.OnClickBack)
     }
 
     override fun onClickCreate() {
-        TODO("Not yet implemented")
+        store.accept(CreateProductStore.Intent.OnClickCreate)
+    }
+
+    override fun onLongClickToPicture(picture: Uri) {
+        store.accept(CreateProductStore.Intent.OnLongClickToPicture(picture))
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("componentContext") componentContext: ComponentContext,
+            @Assisted("onProductSaved")  onProductSaved: () -> Unit,
+            @Assisted("onClickBack")  onClickBack: () -> Unit,
+        ):DefaultCreateProductComponent
     }
 }
