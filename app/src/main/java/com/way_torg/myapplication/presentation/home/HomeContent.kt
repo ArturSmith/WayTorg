@@ -29,9 +29,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -39,9 +42,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Category
-import com.way_torg.myapplication.domain.entity.Filter
 import com.way_torg.myapplication.domain.entity.Product
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,22 +52,7 @@ import com.way_torg.myapplication.domain.entity.Product
 fun HomeContent(
     component: HomeComponent
 ) {
-    val products = List(20) {
-        Product(
-            id = "",
-            name = "Some product",
-            category = Category("", ""),
-            price = 1230.0,
-            discount = it%2*1.0,
-            pictures = emptyList(),
-            rating = 3.2,
-            description = "ksdjfosjkdmflaskdfujoaiksmas,dmjkjrlekm, kjkpujfidmfd;j;a",
-            count = 24
-        )
-    }
-    val categories = List(10) {
-        Filter(it, Category("", "Category $it"), it % 2 == 0)
-    }
+    val model by component.model.collectAsState()
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -97,13 +85,26 @@ fun HomeContent(
                 contentPadding = PaddingValues(horizontal = 10.dp)
             ) {
                 items(
-                    items = categories
+                    items = model.unselectedCategories
                 ) {
-                    CategoryFilterCard(it) {
-                        component.onClickChangeFilterState(it)
+                    CategoryCard(it, false) {
+                        component.onClickSelectedCategory(it)
                     }
                 }
             }
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp)
+            ) {
+                items(
+                    items = model.selectedCategories
+                ) {
+                    CategoryCard(it, true) {
+                        component.onClickUnselectedCategory(it)
+                    }
+                }
+            }
+
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(10.dp),
@@ -111,7 +112,7 @@ fun HomeContent(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(
-                    items = products
+                    items = model.products
                 ) {
                     ProductCard(
                         it,
@@ -138,7 +139,19 @@ private fun ProductCard(
             modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp)
                 .clickable { onClickProduct() },
             shape = RoundedCornerShape(10.dp)
-        ) {}
+        ) {
+            LazyRow(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(items = product.pictures) {
+                    AsyncImage(
+                        model = it,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
         Text(text = product.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = "${stringResource(R.string.rating)} - ${product.rating}")
         buildAnnotatedString {
@@ -164,12 +177,12 @@ private fun ProductCard(
 
 
 @Composable
-private fun CategoryFilterCard(filter: Filter, onClick: () -> Unit) {
+private fun CategoryCard(category: Category, selected: Boolean, onClick: () -> Unit) {
     FilterChip(
-        selected = filter.selected,
+        selected = selected,
         onClick = { onClick() },
         label = {
-            Text(filter.category.name)
+            Text(category.name)
         }
     )
 }
