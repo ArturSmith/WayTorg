@@ -1,12 +1,16 @@
 package com.way_torg.myapplication.domain.repository
 
+import android.net.Uri
 import com.way_torg.myapplication.domain.entity.Product
 import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
-    suspend fun createProduct(product: Product) : Result<Boolean>
-    suspend fun addToBasket(product: Product):Result<Boolean>
     fun getAllProducts(): Flow<List<Product>>
-
-    fun getProductsFromBasket(): Flow<List<Product>>
+    suspend fun createProduct(product: Product, uris:List<Uri>) : Result<Boolean>
+    suspend fun deleteProduct(id:String):Result<Boolean>
+    suspend fun editProduct(product: Product):Result<Boolean>
+    suspend fun addProductToBasket(product: Product):Result<Boolean>
+    suspend fun deleteProductFromBasket(id:String):Result<Boolean>
+    suspend fun getProductsFromBasket(): List<String>
+    fun getCountOfProductsFromBasket():Flow<Int>
 }
