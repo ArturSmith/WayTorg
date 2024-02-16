@@ -12,9 +12,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 class DefaultCreateProductComponent @AssistedInject constructor(
      private val storeFactory: CreateProductStoreFactory,
@@ -37,7 +35,7 @@ class DefaultCreateProductComponent @AssistedInject constructor(
                         onClickBack.invoke()
                     }
 
-                    CreateProductStore.Label.OnClickCreate -> {
+                    CreateProductStore.Label.OnProductCreated -> {
                         onProductSaved.invoke()
                     }
                 }

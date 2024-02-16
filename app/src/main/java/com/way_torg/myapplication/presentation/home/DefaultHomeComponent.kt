@@ -1,23 +1,18 @@
 package com.way_torg.myapplication.presentation.home
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.instancekeeper.InstanceKeeper
-import com.arkivanov.essenty.instancekeeper.getOrCreate
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import com.way_torg.myapplication.domain.entity.Filter
+import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.Product
 import com.way_torg.myapplication.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 class DefaultHomeComponent @AssistedInject constructor(
     private val storeFactory: HomeStoreFactory,
@@ -77,8 +72,12 @@ class DefaultHomeComponent @AssistedInject constructor(
         store.accept(HomeStore.Intent.OnClickCreateProduct)
     }
 
-    override fun onClickChangeFilterState(filter: Filter) {
-        store.accept(HomeStore.Intent.OnClickChangeFilterState(filter))
+    override fun onClickSelectedCategory(category: Category) {
+        store.accept(HomeStore.Intent.OnClickSelectedCategory(category))
+    }
+
+    override fun onClickUnselectedCategory(category: Category) {
+        store.accept(HomeStore.Intent.OnClickUnselectedCategory(category))
     }
 
     override fun onClickAddToBasket(product: Product) {
