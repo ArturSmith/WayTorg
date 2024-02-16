@@ -7,23 +7,30 @@ import com.way_torg.myapplication.domain.entity.Category
 interface CreateProductStore :
     Store<CreateProductStore.Intent, CreateProductStore.State, CreateProductStore.Label> {
 
-    data class State(
-        val name: String,
-        val category: Category,
-        val description: String,
-        val count: String,
-        val price: String,
-        val discount: String,
-        val pictures: List<Uri>
-    )
+    sealed interface State {
+        data class Initial(
+            val name: String,
+            val category: Category,
+            val description: String,
+            val count: String,
+            val price: String,
+            val discount: String,
+            val pictures: List<Uri>
+        ) :State
+        data object Loading:State
+        data object Error:State
+        data object Success:State
+    }
+
 
     sealed interface Label {
         data object OnClickBack : Label
-        data object OnClickCreate : Label
+        data object OnProductCreated : Label
     }
 
 
     sealed interface Intent {
+
         data class OnSetName(val name: String) : Intent
         data class OnSetCategory(val category: Category) : Intent
         data class OnSetCount(val count: String) : Intent
