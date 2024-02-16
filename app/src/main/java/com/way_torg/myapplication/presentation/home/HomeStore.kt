@@ -1,14 +1,15 @@
 package com.way_torg.myapplication.presentation.home
 
 import com.arkivanov.mvikotlin.core.store.Store
-import com.way_torg.myapplication.domain.entity.Filter
+import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.Product
 
 interface HomeStore : Store<HomeStore.Intent, HomeStore.State, HomeStore.Label> {
 
     data class State(
         val products: List<Product>,
-        val filters: List<Filter>,
+        val unselectedCategories: List<Category>,
+        val selectedCategories: List<Category>,
         val productsInBasket: Int
     )
 
@@ -24,7 +25,8 @@ interface HomeStore : Store<HomeStore.Intent, HomeStore.State, HomeStore.Label> 
         data object OnClickBasket : Intent
         data object OnClickChat : Intent
         data object OnClickCreateProduct : Intent
-        data class OnClickChangeFilterState(val filter: Filter) : Intent
+        data class OnClickUnselectedCategory(val category: Category) : Intent
+        data class OnClickSelectedCategory(val category: Category) :Intent
         data class OnClickAddToBasket(val product: Product) : Intent
     }
 }
