@@ -1,4 +1,4 @@
-package com.way_torg.myapplication.presentation.product
+package com.way_torg.myapplication.presentation.details
 
 import com.arkivanov.decompose.ComponentContext
 import kotlinx.coroutines.flow.StateFlow
