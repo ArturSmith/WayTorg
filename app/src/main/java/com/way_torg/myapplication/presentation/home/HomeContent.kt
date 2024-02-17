@@ -88,7 +88,7 @@ fun HomeContent(
                     items = model.unselectedCategories
                 ) {
                     CategoryCard(it, false) {
-                        component.onClickSelectedCategory(it)
+                        component.onClickUnselectedCategory(it)
                     }
                 }
             }
@@ -100,7 +100,7 @@ fun HomeContent(
                     items = model.selectedCategories
                 ) {
                     CategoryCard(it, true) {
-                        component.onClickUnselectedCategory(it)
+                        component.onClickSelectedCategory(it)
                     }
                 }
             }
