@@ -1,6 +1,5 @@
 package com.way_torg.myapplication.presentation.home
 
-import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -16,6 +15,8 @@ import com.way_torg.myapplication.domain.use_case.GetCountProductsFromBasketUseC
 import com.way_torg.myapplication.domain.use_case.SelectCategoryUseCase
 import com.way_torg.myapplication.domain.use_case.UnselectCategoryUseCase
 import com.way_torg.myapplication.extensions.filterByCategory
+import com.way_torg.myapplication.extensions.filterBySelectedCategories
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,7 +36,9 @@ class HomeStoreFactory @Inject constructor(
             Store<HomeStore.Intent, HomeStore.State, HomeStore.Label> by storeFactory.create(
                 name = "HomeStore",
                 initialState = HomeStore.State(
-                    products = emptyList(),
+                    allProducts = emptyList(),
+                    allCategories = emptyList(),
+                    filteredProducts = emptyList(),
                     unselectedCategories = emptyList(),
                     selectedCategories = emptyList(),
                     productsInBasket = 0
@@ -57,7 +60,10 @@ class HomeStoreFactory @Inject constructor(
         data class ProductsLoaded(val products: List<Product>) : Msg
         data class AllCategoriesLoaded(val categories: List<Category>) : Msg
         data class SelectedCategoriesLoaded(val categories: List<Category>) : Msg
+        data class UnselectedCategoriesSet(val categories: List<Category>) : Msg
+        data class FilteredProductsSet(val products: List<Product>) : Msg
         data class CountOfProductsInBasketLoaded(val products: Int) : Msg
+
     }
 
     private inner class ExecutorImpl :
@@ -75,7 +81,7 @@ class HomeStoreFactory @Inject constructor(
                 }
 
                 is Action.ProductsLoaded -> {
-                    dispatch(Msg.ProductsLoaded(action.products.filterByCategory(state.selectedCategories)))
+                    dispatch(Msg.ProductsLoaded(action.products))
                 }
 
                 is Action.CountOfProductsInBasketLoaded -> {
@@ -98,13 +104,13 @@ class HomeStoreFactory @Inject constructor(
 
                 is HomeStore.Intent.OnClickUnselectedCategory -> {
                     scope.launch {
-                        selectCategoryUseCase(intent.category)
+                        async { selectCategoryUseCase(intent.category) }.await()
                     }
                 }
 
                 is HomeStore.Intent.OnClickSelectedCategory -> {
                     scope.launch {
-                        unselectCategoryUseCase(intent.category.id)
+                        async { unselectCategoryUseCase(intent.category.id) }.await()
                     }
                 }
 
@@ -130,17 +136,40 @@ class HomeStoreFactory @Inject constructor(
             }
 
             is Msg.ProductsLoaded -> {
-                copy(products = msg.products)
+                val filteredProducts = msg.products.filterByCategory(selectedCategories)
+                copy(
+                    allProducts = msg.products,
+                    filteredProducts = filteredProducts
+                )
             }
 
             is Msg.SelectedCategoriesLoaded -> {
-                copy(selectedCategories = msg.categories)
+                val selectedCategories = msg.categories
+                val unselectedCategories =
+                    allCategories.filterBySelectedCategories(selectedCategories)
+                val filteredProducts = allProducts.filterByCategory(selectedCategories)
+                copy(
+                    selectedCategories = selectedCategories,
+                    unselectedCategories = unselectedCategories,
+                    filteredProducts = filteredProducts
+                )
             }
 
             is Msg.AllCategoriesLoaded -> {
-                val filterCategories =
-                    msg.categories.filter { !this.selectedCategories.contains(it) }
-                copy(unselectedCategories = filterCategories)
+                val unselectedCategories =
+                    msg.categories.filterBySelectedCategories(selectedCategories)
+                copy(
+                    allCategories = msg.categories,
+                    unselectedCategories = unselectedCategories
+                )
+            }
+
+            is Msg.FilteredProductsSet -> {
+                copy(filteredProducts = msg.products)
+            }
+
+            is Msg.UnselectedCategoriesSet -> {
+                copy(unselectedCategories = msg.categories)
             }
         }
     }
@@ -153,8 +182,8 @@ class HomeStoreFactory @Inject constructor(
                 }
             }
             scope.launch {
-                getSelectedCategoryUseCase().collect {
-                    dispatch(Action.SelectedCategoriesLoaded(it))
+                getSelectedCategoryUseCase().collect { selectedCats ->
+                    dispatch(Action.SelectedCategoriesLoaded(selectedCats))
                 }
             }
             scope.launch {
