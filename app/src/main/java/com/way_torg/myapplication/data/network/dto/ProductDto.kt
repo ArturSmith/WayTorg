@@ -1,5 +1,6 @@
 package com.way_torg.myapplication.data.network.dto
 
+import android.net.Uri
 import com.way_torg.myapplication.domain.entity.Category
 
 class ProductDto() {

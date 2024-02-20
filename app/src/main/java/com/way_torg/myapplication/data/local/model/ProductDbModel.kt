@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.way_torg.myapplication.domain.entity.Category
 
-@Entity("products")
+@Entity(tableName = "products")
 data class ProductDbModel(
     @PrimaryKey val id: String
 )

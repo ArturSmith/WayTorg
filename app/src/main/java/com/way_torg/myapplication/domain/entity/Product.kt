@@ -1,5 +1,6 @@
 package com.way_torg.myapplication.domain.entity
 
+import android.net.Uri
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
