@@ -10,12 +10,14 @@ interface CreateProductStore :
     sealed interface State {
         data class Initial(
             val name: String,
-            val category: Category,
+            val selectedCategory: Category,
+            val categoryName: String,
             val description: String,
             val count: String,
             val price: String,
             val discount: String,
-            val pictures: List<Uri>
+            val pictures: List<Uri>,
+            val allCategories:List<Category>
         ) :State
         data object Loading:State
         data object Error:State
@@ -32,11 +34,12 @@ interface CreateProductStore :
     sealed interface Intent {
 
         data class OnSetName(val name: String) : Intent
-        data class OnSetCategory(val category: Category) : Intent
+        data class OnCategorySelected(val category: Category) : Intent
         data class OnSetCount(val count: String) : Intent
         data class OnSetDescription(val description: String) : Intent
         data class OnSetPrice(val price: String) : Intent
         data class OnSetDiscount(val discount: String) : Intent
+        data class OnSetNewCategory(val categoryName:String):Intent
         data class OnClickAddPictures(val pictures: List<Uri>) : Intent
         data class OnLongClickToPicture(val picture: Uri) : Intent
         data object OnClickBack : Intent
