@@ -1,8 +1,9 @@
 package com.way_torg.myapplication.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
-import com.way_torg.myapplication.data.local.db.Dao
+import com.way_torg.myapplication.data.local.db.AppDao
 import com.way_torg.myapplication.data.mapper.toDto
 import com.way_torg.myapplication.data.mapper.toEntity
 import com.way_torg.myapplication.data.mapper.toModel
@@ -12,14 +13,17 @@ import com.way_torg.myapplication.domain.repository.CategoryRepository
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val dao: Dao
+    private val appDao: AppDao
 ) : CategoryRepository {
+
+
     override fun getAllCategoriesFromRemoteDb() = callbackFlow {
         val observer = firestore.collection(CATEGORIES).addSnapshotListener { value, error ->
             if (error != null || value?.isEmpty == true) return@addSnapshotListener
@@ -35,7 +39,8 @@ class CategoryRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getSelectedCategoriesFromLocalDb() = dao.getCategories()
+    override fun getSelectedCategoriesFromLocalDb() =
+        appDao.getCategories()
         .map {
             it.toEntity()
         }
@@ -60,7 +65,8 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun selectCategory(category: Category): Result<Boolean> {
         return try {
-            dao.addCategory(category.toModel())
+            val model = category.toModel()
+            appDao.addCategory(model)
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
@@ -69,7 +75,7 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun unselectCategory(id: String): Result<Boolean> {
         return try {
-            dao.deleteCategory(id)
+            appDao.deleteCategory(id)
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
