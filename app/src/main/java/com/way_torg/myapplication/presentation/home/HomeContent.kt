@@ -1,14 +1,19 @@
 package com.way_torg.myapplication.presentation.home
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -19,7 +24,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ShoppingBasket
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -28,16 +36,22 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -46,6 +60,7 @@ import coil.compose.AsyncImage
 import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.Product
+import com.way_torg.myapplication.extensions.IfNotEmpty
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,8 +73,16 @@ fun HomeContent(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.AppName)) },
                 actions = {
-                    IconButton(onClick = { component.onClickBasket() })
-                    { Icon(Icons.Filled.ShoppingBasket, contentDescription = null) }
+                    BadgedBox(
+                        badge = {
+                            Badge {
+                                Text(text = model.productsInBasket.toString())
+                            }
+                        },
+                    ) {
+                        Icon(Icons.Filled.ShoppingBasket, contentDescription = null)
+                    }
+                    Spacer(Modifier.width(5.dp))
                     IconButton(onClick = { component.onClickChat() })
                     { Icon(Icons.Filled.Chat, contentDescription = null) }
                 },
@@ -69,7 +92,8 @@ fun HomeContent(
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = null)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         },
         containerColor = Color.White
@@ -112,7 +136,7 @@ fun HomeContent(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(
-                    items = model.products
+                    items = model.filteredProducts
                 ) {
                     ProductCard(
                         it,
@@ -131,40 +155,48 @@ private fun ProductCard(
     onClickProduct: () -> Unit,
     onClickAddToBasket: () -> Unit
 ) {
+    val discount = product.price * product.discount / 100
     Column(
         modifier = Modifier.fillMaxWidth().background(color = Color.White),
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
                 .clickable { onClickProduct() },
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
-            LazyRow(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(items = product.pictures) {
+            Box(Modifier.fillMaxSize()) {
+                product.pictures.IfNotEmpty {
                     AsyncImage(
-                        model = it,
+                        model = product.pictures.first(),
                         contentDescription = null,
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.clip(shape = RoundedCornerShape(10.dp))
                     )
                 }
+                if (discount > 0.0) {
+                    DiscountSpace(product.discount)
+                }
             }
+
         }
         Text(text = product.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "${stringResource(R.string.rating)} - ${product.rating}")
-        buildAnnotatedString {
-            withStyle(style = SpanStyle(color = Color.Black)) {
-                append(product.price.toString())
-            }
-            if (product.discount > 0.0) {
-                withStyle(style = SpanStyle(color = Color.Red, fontSize = 20.sp)) {
-                    append("- ${product.discount}%")
+        val annotatedString = buildAnnotatedString {
+            append(text = "${stringResource(R.string.price)}: ${product.price}")
+            if (discount > 0.0) {
+                withStyle(style = SpanStyle(color = Color.Red)) {
+                    append(text = " - $discount")
                 }
             }
         }
-        Text(text = "${stringResource(R.string.left_in_stock)} - ${product.count}")
+        Text(text = annotatedString)
+        Text(
+            text = "${stringResource(R.string.left_in_stock)}: ${product.count}",
+            fontSize = 12.sp
+        )
         OutlinedButton(
             onClick = { onClickAddToBasket() },
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -186,5 +218,27 @@ private fun CategoryCard(category: Category, selected: Boolean, onClick: () -> U
         }
     )
 }
+
+@Composable
+private fun DiscountSpace(discount: Double) {
+    Canvas(modifier = Modifier.size(60.dp)) {
+        val trianglePath = Path().apply {
+            moveTo(x = 0f, y = 0f)
+            lineTo(x = size.width, y = 0f)
+            lineTo(x = 0f, y = size.height)
+            close()
+        }
+        drawPath(path = trianglePath, color = Color.Red)
+    }
+    Text(
+        text = "${discount.toInt()}%",
+        color = Color.White,
+        fontWeight = FontWeight.ExtraBold,
+        modifier = Modifier
+            .padding(5.dp)
+            .rotate(-45f)
+    )
+}
+
 
 
