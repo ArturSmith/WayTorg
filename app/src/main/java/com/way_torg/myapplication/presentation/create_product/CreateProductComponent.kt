@@ -8,13 +8,14 @@ interface CreateProductComponent {
     val model: StateFlow<CreateProductStore.State>
 
     fun onSetName(name:String)
-    fun onSetCategory(category: Category)
+    fun onCategorySelected(category: Category)
     fun onSetCount(count:String)
     fun onSetDescription(description:String)
     fun onSetPrice(price:String)
     fun onSetDiscount(discount:String)
     fun onClickAddPictures(pictures:List<Uri>)
     fun onLongClickToPicture(picture:Uri)
+    fun onSetNewCategory(text:String)
     fun onClickBack()
     fun onClickCreate()
 }
