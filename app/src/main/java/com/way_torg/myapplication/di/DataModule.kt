@@ -3,8 +3,8 @@ package com.way_torg.myapplication.di
 import android.content.Context
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.way_torg.myapplication.data.local.db.Dao
-import com.way_torg.myapplication.data.local.db.WayTorgDatabase
+import com.way_torg.myapplication.data.local.db.AppDao
+import com.way_torg.myapplication.data.local.db.AppDatabase
 import com.way_torg.myapplication.data.repository.CategoryRepositoryImpl
 import com.way_torg.myapplication.data.repository.ProductRepositoryImpl
 import com.way_torg.myapplication.domain.repository.CategoryRepository
@@ -31,13 +31,13 @@ interface DataModule {
         fun provideFirebaseStorage(): FirebaseStorage = FirebaseStorage.getInstance()
 
         @[ApplicationScope Provides]
-        fun provideWayTorgDatabase(context: Context): WayTorgDatabase {
-            return WayTorgDatabase.getInstance(context)
+        fun provideAppDatabase(context: Context): AppDatabase {
+            return AppDatabase.getInstance(context)
         }
 
         @[ApplicationScope Provides]
-        fun provideDao(wayTorgDatabase: WayTorgDatabase): Dao {
-            return wayTorgDatabase.dao()
+        fun provideAppDao(appDatabase: AppDatabase): AppDao {
+            return appDatabase.appDao()
         }
     }
 
