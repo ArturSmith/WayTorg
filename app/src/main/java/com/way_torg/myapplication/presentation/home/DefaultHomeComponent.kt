@@ -11,7 +11,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class DefaultHomeComponent @AssistedInject constructor(
@@ -29,6 +32,8 @@ class DefaultHomeComponent @AssistedInject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<HomeStore.State>
         get() = store.stateFlow
+
+
 
     init {
         componentScope().launch {
@@ -85,13 +90,13 @@ class DefaultHomeComponent @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface  Factory {
+    interface Factory {
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext,
-            @Assisted("onClickCreateProduct")  onClickCreateProduct: () -> Unit,
-            @Assisted("onClickChat")  onClickChat: () -> Unit,
-            @Assisted("onClickProduct")  onClickProduct: (product: Product) -> Unit,
-            @Assisted("onClickBasket")  onClickBasket: () -> Unit
-        ) : DefaultHomeComponent
+            @Assisted("onClickCreateProduct") onClickCreateProduct: () -> Unit,
+            @Assisted("onClickChat") onClickChat: () -> Unit,
+            @Assisted("onClickProduct") onClickProduct: (product: Product) -> Unit,
+            @Assisted("onClickBasket") onClickBasket: () -> Unit
+        ): DefaultHomeComponent
     }
 }
