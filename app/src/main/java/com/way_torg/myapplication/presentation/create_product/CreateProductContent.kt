@@ -1,6 +1,7 @@
 package com.way_torg.myapplication.presentation.create_product
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,10 +27,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -40,6 +45,9 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.way_torg.myapplication.R
+import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.extensions.asInitial
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,6 +173,12 @@ private fun InitialState(
                 keyboardType = KeyboardType.Number
             )
         )
+        Categories(
+            categories = state.allCategories,
+            categoryName = state.categoryName,
+            onSelected = { component.onCategorySelected(it) },
+            onSetNewCategory = { component.onSetNewCategory(it) }
+        )
         if (state.pictures.isNotEmpty()) {
             Text(
                 stringResource(R.string.long_click_to_delete_pic),
@@ -227,7 +242,7 @@ private fun ErrorState(state: CreateProductStore.State) {
 
 @Composable
 private fun SuccessState(state: CreateProductStore.State) {
-
+    Icon(Icons.Filled.Done, contentDescription = null)
 }
 
 @Composable
@@ -250,5 +265,51 @@ private fun TakePicturesFromGalery(onSetPictures: (pictures: List<Uri>) -> Unit)
         contentAlignment = Alignment.Center
     ) {
         Icon(Icons.Default.Image, contentDescription = null)
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Categories(
+    categories: List<Category>,
+    categoryName: String,
+    onSelected: (category: Category) -> Unit,
+    onSetNewCategory: (text: String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        modifier = Modifier,
+        expanded = expanded,
+        onExpandedChange = {
+            Log.d("Categories", expanded.toString())
+            expanded = !expanded
+        },
+    ) {
+        OutlinedTextField(
+            modifier = Modifier.menuAnchor(),
+            value = categoryName,
+            onValueChange = {
+                onSetNewCategory(it)
+            },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+        )
+        ExposedDropdownMenu(
+            modifier = Modifier,
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
+            },
+        ) {
+            categories.forEach { category ->
+                DropdownMenuItem(
+                    text = { Text(text = category.name) },
+                    onClick = {
+                        onSelected(category)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }
