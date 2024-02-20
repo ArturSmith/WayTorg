@@ -1,29 +1,40 @@
 package com.way_torg.myapplication.presentation.create_product
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.res.stringResource
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
+import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.Product
+import com.way_torg.myapplication.domain.use_case.CreateCategoryUseCase
 import com.way_torg.myapplication.domain.use_case.CreateProductUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllCategoriesFromRemoteDbUseCase
 import com.way_torg.myapplication.domain.use_case.UnselectCategoryUseCase
 import com.way_torg.myapplication.extensions.asInitial
+import com.way_torg.myapplication.extensions.getOrCreateCategory
 import com.way_torg.myapplication.extensions.toNewDouble
 import com.way_torg.myapplication.extensions.toNewInt
+import com.way_torg.myapplication.presentation.home.HomeStoreFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
 class CreateProductStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
+    private val context: Context,
     private val createProductUseCase: CreateProductUseCase,
-    private val createCategoryUseCase: UnselectCategoryUseCase,
+    private val createCategoryUseCase: CreateCategoryUseCase,
     private val getAllCategoriesFromRemoteDbUseCase: GetAllCategoriesFromRemoteDbUseCase
 ) {
     fun create(): CreateProductStore = object : CreateProductStore,
@@ -32,31 +43,38 @@ class CreateProductStoreFactory @Inject constructor(
             name = "CreateProductStore",
             initialState = CreateProductStore.State.Initial(
                 name = "",
-                category = Category("", ""),
+                selectedCategory = Category("", ""),
+                categoryName = context.resources.getString(R.string.category),
                 description = "",
                 count = "",
                 price = "",
                 discount = "",
-                pictures = emptyList()
+                pictures = emptyList(),
+                allCategories = emptyList()
             ),
             reducer = ReducerImpl,
-            executorFactory = ::ExecutorImpl
+            executorFactory = ::ExecutorImpl,
+            bootstrapper = BootstrapperImpl()
         ) {}
 
 
-    private sealed interface Action
+    private sealed interface Action {
+        data class CategoriesLoaded(val categories: List<Category>) : Action
+    }
 
 
     private sealed interface Msg {
 
         data class OnSetName(val name: String) : Msg
-        data class OnSetCategory(val category: Category) : Msg
+        data class OnCategorySelected(val category: Category) : Msg
         data class OnSetCount(val count: String) : Msg
         data class OnSetDescription(val description: String) : Msg
         data class OnSetPrice(val price: String) : Msg
         data class OnSetDiscount(val discount: String) : Msg
         data class OnClickAddPictures(val pictures: List<Uri>) : Msg
         data class OnLongClickToPicture(val picture: Uri) : Msg
+        data class OnSetNewCategory(val text: String) : Msg
+        data class CategoriesLoaded(val categories: List<Category>) : Msg
 
         data object Loading : Msg
         data object Error : Msg
@@ -66,6 +84,14 @@ class CreateProductStoreFactory @Inject constructor(
 
     private inner class ExecutorImpl :
         CoroutineExecutor<CreateProductStore.Intent, Action, CreateProductStore.State, Msg, CreateProductStore.Label>() {
+        override fun executeAction(action: Action, getState: () -> CreateProductStore.State) {
+            when (action) {
+                is Action.CategoriesLoaded -> {
+                    dispatch(Msg.CategoriesLoaded(action.categories))
+                }
+            }
+        }
+
         override fun executeIntent(
             intent: CreateProductStore.Intent,
             getState: () -> CreateProductStore.State
@@ -82,10 +108,15 @@ class CreateProductStoreFactory @Inject constructor(
                 is CreateProductStore.Intent.OnClickCreate -> {
                     val state = getState().asInitial()
                     scope.launch {
+
+                        dispatch(Msg.Loading)
+
+                        val category = getCategory(state.allCategories, state.categoryName)
+
                         val product = Product(
                             id = UUID.randomUUID().toString(),
                             name = state.name.trim(),
-                            category = state.category,
+                            category = category,
                             description = state.description.trim(),
                             count = state.count.toNewInt(),
                             price = state.price.toNewDouble(),
@@ -93,9 +124,8 @@ class CreateProductStoreFactory @Inject constructor(
                             pictures = emptyList(),
                             rating = 0.0
                         )
-                        dispatch(Msg.Loading)
                         val result = async { createProductUseCase(product, state.pictures) }.await()
-                        Log.d("createProductUseCase", result.toString())
+
                         if (result.isFailure) {
                             dispatch(Msg.Error)
                         } else {
@@ -106,8 +136,8 @@ class CreateProductStoreFactory @Inject constructor(
                     }
                 }
 
-                is CreateProductStore.Intent.OnSetCategory -> {
-                    dispatch(Msg.OnSetCategory(intent.category))
+                is CreateProductStore.Intent.OnCategorySelected -> {
+                    dispatch(Msg.OnCategorySelected(intent.category))
                 }
 
                 is CreateProductStore.Intent.OnSetCount -> {
@@ -133,8 +163,23 @@ class CreateProductStoreFactory @Inject constructor(
                 is CreateProductStore.Intent.OnLongClickToPicture -> {
                     dispatch(Msg.OnLongClickToPicture(intent.picture))
                 }
+
+                is CreateProductStore.Intent.OnSetNewCategory -> {
+                    dispatch(Msg.OnSetNewCategory(intent.categoryName))
+                }
             }
         }
+
+
+        private suspend fun getCategory(categories: List<Category>, newCategory: String) =
+            withContext(Dispatchers.IO) {
+                newCategory.getOrCreateCategory(categories) {
+                    val category =
+                        Category(id = UUID.randomUUID().toString(), name = it)
+                    val result = async { createCategoryUseCase(category) }.await()
+                    if (result.isSuccess) category else Category.defaultInstance
+                }
+            }
     }
 
 
@@ -147,14 +192,17 @@ class CreateProductStoreFactory @Inject constructor(
                 CreateProductStore.State.Success -> reduceOther(msg)
             }
 
-        private fun CreateProductStore.State.Initial.reduceInitial(msg: Msg) : CreateProductStore.State =
+        private fun CreateProductStore.State.Initial.reduceInitial(msg: Msg): CreateProductStore.State =
             when (msg) {
                 is Msg.OnClickAddPictures -> {
                     copy(pictures = msg.pictures)
                 }
 
-                is Msg.OnSetCategory -> {
-                    copy(category = msg.category)
+                is Msg.OnCategorySelected -> {
+                    copy(
+                        selectedCategory = msg.category,
+                        categoryName = msg.category.name
+                    )
                 }
 
                 is Msg.OnSetCount -> {
@@ -172,16 +220,19 @@ class CreateProductStoreFactory @Inject constructor(
                         discount = msg.discount.trim()
                     )
                 }
+
                 is Msg.OnSetName -> {
                     copy(
                         name = msg.name
                     )
                 }
+
                 is Msg.OnSetPrice -> {
                     copy(
                         price = msg.price.trim()
                     )
                 }
+
                 is Msg.OnLongClickToPicture -> {
                     val newList = pictures.toMutableList()
                     newList.remove(msg.picture)
@@ -189,9 +240,19 @@ class CreateProductStoreFactory @Inject constructor(
                         pictures = newList
                     )
                 }
+
+                is Msg.OnSetNewCategory -> {
+                    copy(categoryName = msg.text)
+                }
+
+                is Msg.CategoriesLoaded -> {
+                    copy(allCategories = msg.categories)
+                }
+
                 Msg.Error,
                 Msg.Loading,
                 Msg.Success -> reduceOther(msg)
+
             }
 
         private fun CreateProductStore.State.reduceOther(msg: Msg): CreateProductStore.State =
@@ -202,4 +263,16 @@ class CreateProductStoreFactory @Inject constructor(
                 else -> this
             }
     }
+
+    private inner class BootstrapperImpl :
+        CoroutineBootstrapper<Action>() {
+        override fun invoke() {
+            scope.launch {
+                getAllCategoriesFromRemoteDbUseCase().collect {
+                    dispatch(Action.CategoriesLoaded(it))
+                }
+            }
+        }
+    }
+
 }
