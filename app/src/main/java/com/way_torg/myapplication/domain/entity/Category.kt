@@ -2,6 +2,7 @@ package com.way_torg.myapplication.domain.entity
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
+import java.util.UUID
 
 @Parcelize
 data class Category(
@@ -9,6 +10,6 @@ data class Category(
     val name: String
 ):Parcelable {
     companion object {
-        val defaultInstance = Category("","")
+        val defaultInstance = Category("Default","Default")
     }
 }
