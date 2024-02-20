@@ -15,13 +15,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class DefaultCreateProductComponent @AssistedInject constructor(
-     private val storeFactory: CreateProductStoreFactory,
-     @Assisted("componentContext") componentContext: ComponentContext,
-     @Assisted("onProductSaved") private val onProductSaved: () -> Unit,
-     @Assisted("onClickBack") private val onClickBack: () -> Unit,
+    private val storeFactory: CreateProductStoreFactory,
+    @Assisted("componentContext") componentContext: ComponentContext,
+    @Assisted("onProductSaved") private val onProductSaved: () -> Unit,
+    @Assisted("onClickBack") private val onClickBack: () -> Unit,
 ) : CreateProductComponent, ComponentContext by componentContext {
 
-    private val store = instanceKeeper.getStore {storeFactory.create()}
+    private val store = instanceKeeper.getStore { storeFactory.create() }
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,8 +47,8 @@ class DefaultCreateProductComponent @AssistedInject constructor(
         store.accept(CreateProductStore.Intent.OnSetName(name))
     }
 
-    override fun onSetCategory(category: Category) {
-        store.accept(CreateProductStore.Intent.OnSetCategory(category))
+    override fun onCategorySelected(category: Category) {
+        store.accept(CreateProductStore.Intent.OnCategorySelected(category))
     }
 
     override fun onSetCount(count: String) {
@@ -83,12 +83,16 @@ class DefaultCreateProductComponent @AssistedInject constructor(
         store.accept(CreateProductStore.Intent.OnLongClickToPicture(picture))
     }
 
+    override fun onSetNewCategory(text: String) {
+        store.accept(CreateProductStore.Intent.OnSetNewCategory(text))
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext,
-            @Assisted("onProductSaved")  onProductSaved: () -> Unit,
-            @Assisted("onClickBack")  onClickBack: () -> Unit,
-        ):DefaultCreateProductComponent
+            @Assisted("onProductSaved") onProductSaved: () -> Unit,
+            @Assisted("onClickBack") onClickBack: () -> Unit,
+        ): DefaultCreateProductComponent
     }
 }
