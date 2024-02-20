@@ -1,5 +1,6 @@
 package com.way_torg.myapplication.extensions
 
+import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.way_torg.myapplication.domain.entity.Category
@@ -35,6 +36,28 @@ fun String.toNewDouble(): Double {
 }
 
 
-fun List<Product>.filterByCategory(list: List<Category>): List<Product> {
-    return if (list.isEmpty()) this else this.filter { list.contains(it.category) }
+fun List<Product>.filterByCategory(categories: List<Category>): List<Product> {
+    return if (categories.isEmpty()) this else this.filter { product -> categories.any { it.id == product.category.id } }
 }
+
+
+fun List<Category>.filterBySelectedCategories(selectedList: List<Category>): List<Category> {
+    return if (selectedList.isEmpty()) this else filter { cat -> !selectedList.any { it.id == cat.id } }
+}
+
+@Composable
+fun <T> Collection<T>.IfNotEmpty(predicate: @Composable () -> Unit) {
+    if (isNotEmpty()) {
+        predicate()
+    }
+}
+
+
+suspend fun String.getOrCreateCategory(
+    categories: List<Category>,
+    predicate: suspend (newCategory: String) -> Category
+) = categories.find { it.name == this } ?: predicate(this)
+
+
+
+
