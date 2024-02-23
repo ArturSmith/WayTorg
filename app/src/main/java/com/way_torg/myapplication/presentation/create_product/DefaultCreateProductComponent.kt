@@ -31,10 +31,6 @@ class DefaultCreateProductComponent @AssistedInject constructor(
         componentScope().launch {
             store.labels.collect {
                 when (it) {
-                    CreateProductStore.Label.OnClickBack -> {
-                        onClickBack.invoke()
-                    }
-
                     CreateProductStore.Label.OnProductCreated -> {
                         onProductSaved.invoke()
                     }
@@ -72,7 +68,7 @@ class DefaultCreateProductComponent @AssistedInject constructor(
     }
 
     override fun onClickBack() {
-        store.accept(CreateProductStore.Intent.OnClickBack)
+        onClickBack.invoke()
     }
 
     override fun onClickCreate() {
