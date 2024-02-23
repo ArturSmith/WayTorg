@@ -34,47 +34,20 @@ class DefaultHomeComponent @AssistedInject constructor(
         get() = store.stateFlow
 
 
-
-    init {
-        componentScope().launch {
-            store.labels.collect {
-                when (it) {
-                    HomeStore.Label.OnClickBasket -> {
-                        onClickBasket.invoke()
-                    }
-
-                    HomeStore.Label.OnClickChat -> {
-                        onClickChat.invoke()
-                    }
-
-                    HomeStore.Label.OnClickCreateProduct -> {
-                        onClickCreateProduct.invoke()
-                    }
-
-                    is HomeStore.Label.OnClickProduct -> {
-                        onClickProduct.invoke(it.product)
-                    }
-                }
-            }
-        }
-    }
-
-
     override fun onClickProduct(product: Product) {
-        store.accept(HomeStore.Intent.OnClickProduct(product))
+        onClickProduct.invoke(product)
     }
 
     override fun onClickBasket() {
-
-        store.accept(HomeStore.Intent.OnClickBasket)
+        onClickBasket.invoke()
     }
 
     override fun onClickChat() {
-        store.accept(HomeStore.Intent.OnClickChat)
+        onClickChat.invoke()
     }
 
     override fun onClickCreateProduct() {
-        store.accept(HomeStore.Intent.OnClickCreateProduct)
+        onClickCreateProduct.invoke()
     }
 
     override fun onClickSelectedCategory(category: Category) {
