@@ -28,6 +28,9 @@ data class Product(
             0.0,
             emptyList(),
             0.0)
+
+        const val CATEGORY = "category"
+        const val ID = "id"
     }
 
 }
