@@ -17,7 +17,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
@@ -100,7 +100,7 @@ class ProductRepositoryImpl @Inject constructor(
 
     override fun getAllProducts(): Flow<List<Product>> = callbackFlow {
         val observer = firestore.collection(PRODUCTS).addSnapshotListener { value, error ->
-            if (error != null || value?.documents?.isEmpty()==true) return@addSnapshotListener
+            if (error != null || value?.documents?.isEmpty() == true) return@addSnapshotListener
 
             val products = value?.documents?.map {
                 it.toObject<ProductDto>()?.let { it.toEntity() } ?: Product.defaultInstance()
@@ -114,10 +114,24 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getProductsFromBasket() =
-        appDao.getProducts().map {
-            it.id
+
+    override fun getProductsFromBasket() = appDao.getProducts()
+        .map {
+            it.map { it.id }
         }
+
+    override suspend fun getProductsById(ids: List<String>) = if (ids.isNotEmpty()) {
+        firestore.collection(PRODUCTS)
+            .whereIn(Product.ID, ids)
+            .get()
+            .await()
+            .documents
+            .map {
+                it.toObject<ProductDto>()?.let { it.toEntity() }
+                    ?: Product.defaultInstance()
+            }
+    } else emptyList()
+
 
     override fun getCountOfProductsFromBasket() = appDao.getCountOfProducts()
 
