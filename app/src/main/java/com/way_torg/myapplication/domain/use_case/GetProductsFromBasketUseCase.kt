@@ -4,5 +4,5 @@ import com.way_torg.myapplication.domain.repository.ProductRepository
 import javax.inject.Inject
 
 class GetProductsFromBasketUseCase @Inject constructor(private val repository: ProductRepository) {
-    suspend operator fun invoke() = repository.getProductsFromBasket()
+     operator fun invoke() = repository.getProductsFromBasket()
 }
