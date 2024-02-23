@@ -70,7 +70,6 @@ class HomeStoreFactory @Inject constructor(
         CoroutineExecutor<HomeStore.Intent, Action, HomeStore.State, Msg, HomeStore.Label>() {
 
         override fun executeAction(action: Action, getState: () -> HomeStore.State) {
-            val state = getState()
             when (action) {
                 is Action.AllCategoriesLoaded -> {
                     dispatch(Msg.AllCategoriesLoaded(action.categories))
@@ -97,33 +96,15 @@ class HomeStoreFactory @Inject constructor(
                         addProductToBasketUseCase(intent.product)
                     }
                 }
-
-                HomeStore.Intent.OnClickBasket -> {
-                    publish(HomeStore.Label.OnClickBasket)
-                }
-
                 is HomeStore.Intent.OnClickUnselectedCategory -> {
                     scope.launch {
                         async { selectCategoryUseCase(intent.category) }.await()
                     }
                 }
-
                 is HomeStore.Intent.OnClickSelectedCategory -> {
                     scope.launch {
                         async { unselectCategoryUseCase(intent.category.id) }.await()
                     }
-                }
-
-                HomeStore.Intent.OnClickChat -> {
-                    publish(HomeStore.Label.OnClickChat)
-                }
-
-                HomeStore.Intent.OnClickCreateProduct -> {
-                    publish(HomeStore.Label.OnClickCreateProduct)
-                }
-
-                is HomeStore.Intent.OnClickProduct -> {
-                    publish(HomeStore.Label.OnClickProduct(intent.product))
                 }
             }
         }
