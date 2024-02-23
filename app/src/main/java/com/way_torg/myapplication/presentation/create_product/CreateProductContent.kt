@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -42,6 +43,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,9 +83,11 @@ fun CreateProductContent(
                             contentDescription = null
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
-        }
+        },
+        containerColor = Color.White
     ) {
         Box(
             modifier = Modifier.padding(it).fillMaxSize(),
@@ -126,22 +130,17 @@ private fun InitialState(
             placeholder = { Text(stringResource(R.string.name)) },
             onValueChange = {
                 component.onSetName(it)
-            }
+            },
+            isError = state.isNameError
         )
-//                OutlinedTextField(
-//                    value = state.category,
-//                    placeholder = { Text(stringResource(R.string.category)) },
-//                    onValueChange = {
-//                        component.onSetCategory()
-//                    }
-//                )
         OutlinedTextField(
             value = state.description,
             placeholder = { Text(stringResource(R.string.description)) },
             onValueChange = {
                 component.onSetDescription(it)
             },
-            modifier = Modifier.height(100.dp).widthIn(max = TextFieldDefaults.MinWidth)
+            modifier = Modifier.height(100.dp).widthIn(max = TextFieldDefaults.MinWidth),
+            isError = state.isDescriptionError
         )
         OutlinedTextField(
             value = state.count,
@@ -151,7 +150,8 @@ private fun InitialState(
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
-            )
+            ),
+            isError = state.isCountError
         )
         OutlinedTextField(
             value = state.price,
@@ -161,7 +161,8 @@ private fun InitialState(
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
-            )
+            ),
+            isError = state.isPriceError
         )
         OutlinedTextField(
             value = state.discount,
@@ -173,6 +174,12 @@ private fun InitialState(
                 keyboardType = KeyboardType.Number
             )
         )
+        if (state.isCategoryError) {
+            Text(
+                text = stringResource(R.string.select_category),
+                color = Color.Red
+            )
+        }
         Categories(
             categories = state.allCategories,
             categoryName = state.categoryName,
@@ -242,7 +249,12 @@ private fun ErrorState(state: CreateProductStore.State) {
 
 @Composable
 private fun SuccessState(state: CreateProductStore.State) {
-    Icon(Icons.Filled.Done, contentDescription = null)
+    Icon(
+        Icons.Filled.Done,
+        contentDescription = null,
+        tint = Color.Green,
+        modifier = Modifier.size(50.dp)
+    )
 }
 
 @Composable
