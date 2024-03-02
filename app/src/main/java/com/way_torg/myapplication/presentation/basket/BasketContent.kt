@@ -62,9 +62,9 @@ import coil.compose.SubcomposeAsyncImage
 import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.ProductWrapper
 import com.way_torg.myapplication.extensions.ifNotEmpty
+import com.way_torg.myapplication.extensions.isOrderingEnable
 import com.way_torg.myapplication.presentation.utils.priceAnnotatedString
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BasketContent(
     component: BasketComponent
@@ -81,6 +81,24 @@ fun BasketContent(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(modifier = Modifier.size(30.dp))
+            }
+        }
+
+        BasketStore.State.Success -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Card(
+                    modifier = Modifier.width(300.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Green)
+                ) {
+                    Text(
+                        text = stringResource(R.string.success_order),
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.fillMaxWidth().padding(10.dp)
+                    )
+                }
             }
         }
     }
@@ -111,21 +129,21 @@ private fun InitialState(model: BasketStore.State.Initial, component: BasketComp
                 onClick = {
                     component.showSheet()
                 },
-                enabled = model.isOrderingEnable,
+                enabled = model.isOrderingEnable(),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)
             ) {
                 Text(text = stringResource(R.string.order))
             }
         }
     ) {
-        if (model.products.isNotEmpty()) {
+        if (model.order.products.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier.padding(it),
                 contentPadding = PaddingValues(10.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp)
             ) {
                 items(
-                    items = model.products,
+                    items = model.order.products,
                     key = { it.product.id }
                 ) {
                     BasketProductItem(it, component)
@@ -133,7 +151,7 @@ private fun InitialState(model: BasketStore.State.Initial, component: BasketComp
             }
 
             if (model.isSheetVisible) {
-                BottomSheet(model) {
+                BottomSheet(model, component) {
                     component.hideSheet()
                 }
             }
@@ -235,7 +253,7 @@ private fun BasketProductItem(
                     Spacer(Modifier.weight(1f))
                     IncreaseDecreaseButtons(
                         modifier = Modifier.align(Alignment.Start),
-                        quantity = productWrapper.quantityInBasket,
+                        quantity = productWrapper.quantity,
                         increase = { component.increaseQuantity(productWrapper.product.id) },
                         decrease = { component.decreaseQuantity(productWrapper.product.id) }
                     )
@@ -280,29 +298,49 @@ private fun IncreaseDecreaseButtons(
 @Composable
 private fun BottomSheet(
     model: BasketStore.State.Initial,
+    component: BasketComponent,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
-        containerColor = Color.White
+        containerColor = Color.White,
+        tonalElevation = 10.dp
     ) {
         Box(
             modifier = Modifier.fillMaxSize().padding(10.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            LazyColumn {
-                itemsIndexed(items = model.products) { index, item ->
-                    OrderProductItem(item, index + 1)
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                if (model.customersFromDb.isNotEmpty()) {
+                    item {
+                        Text(
+                            stringResource(R.string.choose_one_of_addresses),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    itemsIndexed(
+                        items = model.customersFromDb
+                    ) { index, item ->
+                        Card(
+                            modifier = Modifier
+                                .width(TextFieldDefaults.MinWidth)
+                                .clickable {
+                                    component.onClickCustomer(item)
+                                },
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+                        ) {
+                            Text(
+                                text = item.name,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
+                    }
                 }
-                item {
-                    Text(
-                        text = annotatedTotalPriceString(model),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                item { Spacer(Modifier.height(15.dp)) }
                 item {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -310,13 +348,18 @@ private fun BottomSheet(
                     ) {
                         OutlinedTextField(
                             value = model.customerInfo.name,
-                            placeholder = { Text(stringResource(R.string.name)) },
-                            onValueChange = {}
+                            label = { Text(stringResource(R.string.name)) },
+                            isError = model.isCustomerNameError,
+                            onValueChange = {
+                                component.setCustomerName(it)
+                            }
                         )
                         OutlinedTextField(
                             value = model.customerInfo.address,
-                            placeholder = { Text(stringResource(R.string.address)) },
-                            onValueChange = {}
+                            label = { Text(stringResource(R.string.address)) },
+                            onValueChange = {
+                                component.setCustomerAddress(it)
+                            }
                         )
                         Text(
                             text = stringResource(R.string.contact_warning),
@@ -328,18 +371,47 @@ private fun BottomSheet(
                         )
                         OutlinedTextField(
                             value = model.customerInfo.contact,
-                            placeholder = { Text(stringResource(R.string.contact)) },
-                            onValueChange = {}
+                            label = { Text(stringResource(R.string.contact)) },
+                            isError = model.isCustomerContactError,
+                            onValueChange = {
+                                component.setCustomerContact(it)
+                            }
                         )
                         OutlinedTextField(
                             modifier = Modifier.height(100.dp),
                             value = model.customerInfo.message,
-                            placeholder = { Text(stringResource(R.string.message)) },
-                            onValueChange = {}
+                            label = { Text(stringResource(R.string.message)) },
+                            onValueChange = {
+                                component.setCustomerMessage(it)
+                            }
                         )
-                        Button({}) {
-                            Text(stringResource(R.string.order))
-                        }
+
+                    }
+                }
+                item {
+                    Text(
+                        stringResource(R.string.items),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                itemsIndexed(items = model.order.products) { index, item ->
+                    OrderProductItem(item, index + 1)
+                }
+                item {
+                    Text(
+                        text = annotatedTotalPriceString(model),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                item {
+                    Button(
+                        onClick = {
+                            component.order()
+                        },
+                        modifier = Modifier.width(TextFieldDefaults.MinWidth)
+                    ) {
+                        Text(stringResource(R.string.order))
                     }
                 }
             }
@@ -357,7 +429,7 @@ private fun OrderProductItem(
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Text(text = "$number. ${productWrapper.product.name} /")
-        Text(text = "${productWrapper.quantityInBasket} /")
+        Text(text = "${productWrapper.quantity} /")
         Text(
             text = "${productWrapper.getTotalPriceWithoutDiscount()}",
             textDecoration = if (productWrapper.getDiscount() > 0.0) TextDecoration.LineThrough else TextDecoration.None
@@ -372,13 +444,13 @@ private fun OrderProductItem(
 private fun annotatedTotalPriceString(model: BasketStore.State.Initial) =
     buildAnnotatedString {
         append("${stringResource(R.string.total_price)}:")
-        append(" ${model.totalPriceWithoutDiscount}")
-        if (model.getDiscount > 0.0) {
+        append(" ${model.order.totalPriceWithoutDiscount()}")
+        if (model.order.totalDiscount() > 0.0) {
             withStyle(style = SpanStyle(color = Color.Red)) {
-                append(" - ${model.getDiscount}")
+                append(" - ${model.order.totalDiscount()}")
             }
             withStyle(style = SpanStyle()) {
-                append(" = ${model.totalPriceWithDiscount}")
+                append(" = ${model.order.totalPriceWithDiscount()}")
             }
         }
     }
