@@ -22,18 +22,17 @@ interface AppDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addProduct(productDbModel: ProductDbModel)
-
     @Query("DELETE FROM products WHERE id=:id")
     suspend fun deleteProduct(id: String)
-
+    @Query("DELETE FROM products")
+    suspend fun cleanBasket()
     @Query("SELECT * FROM products ")
     fun getProducts(): Flow<List<ProductDbModel>>
 
     @Query("SELECT COUNT(*) FROM products")
     fun getCountOfProducts(): Flow<Int>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun addCustomer(customerInfoDbModel: CustomerInfoDbModel)
+    suspend fun addCustomer(customerInfoDbModel: CustomerInfoDbModel)
     @Query("SELECT * FROM customers")
     fun getCustomers():Flow<List<CustomerInfoDbModel>>
 }
