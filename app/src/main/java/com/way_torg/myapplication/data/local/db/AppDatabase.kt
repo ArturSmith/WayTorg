@@ -5,10 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.way_torg.myapplication.data.local.model.CategoryDbModel
+import com.way_torg.myapplication.data.local.model.CustomerInfoDbModel
 import com.way_torg.myapplication.data.local.model.ProductDbModel
 
 @Database(
-    entities = [ProductDbModel::class, CategoryDbModel::class],
+    entities = [ProductDbModel::class, CategoryDbModel::class, CustomerInfoDbModel::class],
     version = 1,
     exportSchema = false
 )
@@ -16,7 +17,7 @@ abstract class AppDatabase() : RoomDatabase() {
     abstract fun appDao(): AppDao
 
     companion object {
-        private const val NAME = "wayTorgDatabase"
+        private const val NAME = "AppDatabase"
         private var INSTANCE: AppDatabase? = null
         private val LOCK = Any()
 
