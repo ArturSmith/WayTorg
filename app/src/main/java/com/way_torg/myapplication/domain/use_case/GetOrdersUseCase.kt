@@ -2,7 +2,8 @@ package com.way_torg.myapplication.domain.use_case
 
 import com.way_torg.myapplication.domain.entity.Order
 import com.way_torg.myapplication.domain.repository.OrderRepository
+import javax.inject.Inject
 
-class OrderUseCase(private val repository: OrderRepository) {
-    suspend operator fun invoke(order: Order) = repository.order(order)
+class GetOrdersUseCase @Inject constructor(private val repository: OrderRepository) {
+     operator fun invoke() = repository.getOrders()
 }
