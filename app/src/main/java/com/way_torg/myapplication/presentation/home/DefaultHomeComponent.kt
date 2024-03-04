@@ -62,6 +62,22 @@ class DefaultHomeComponent @AssistedInject constructor(
         store.accept(HomeStore.Intent.OnClickAddToBasket(product))
     }
 
+    override fun onClickAuthButton() {
+        store.accept(HomeStore.Intent.OnClickAuthButton)
+    }
+
+    override fun changeAuthDialogVisibility() {
+        store.accept(HomeStore.Intent.ChangeAuthDialogVisibility)
+    }
+
+    override fun onClickLogin() {
+        store.accept(HomeStore.Intent.OnClickLogin)
+    }
+
+    override fun onPasswordValueChangeListener(value: String) {
+        store.accept(HomeStore.Intent.OnPasswordValueChangeListener(value))
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(
