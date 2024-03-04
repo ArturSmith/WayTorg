@@ -6,6 +6,7 @@ import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.way_torg.myapplication.domain.entity.Category
+import com.way_torg.myapplication.domain.entity.Product
 import com.way_torg.myapplication.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -16,12 +17,13 @@ import kotlinx.coroutines.launch
 
 class DefaultCreateProductComponent @AssistedInject constructor(
     private val storeFactory: CreateProductStoreFactory,
+    @Assisted("product") private val product: Product?,
     @Assisted("componentContext") componentContext: ComponentContext,
     @Assisted("onProductSaved") private val onProductSaved: () -> Unit,
     @Assisted("onClickBack") private val onClickBack: () -> Unit,
 ) : CreateProductComponent, ComponentContext by componentContext {
 
-    private val store = instanceKeeper.getStore { storeFactory.create() }
+    private val store = instanceKeeper.getStore { storeFactory.create(product) }
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -86,6 +88,7 @@ class DefaultCreateProductComponent @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
+            @Assisted("product") product: Product?,
             @Assisted("componentContext") componentContext: ComponentContext,
             @Assisted("onProductSaved") onProductSaved: () -> Unit,
             @Assisted("onClickBack") onClickBack: () -> Unit,
