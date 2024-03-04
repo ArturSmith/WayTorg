@@ -26,10 +26,10 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override fun getAllCategoriesFromRemoteDb() = callbackFlow {
         val observer = firestore.collection(CATEGORIES).addSnapshotListener { value, error ->
-            if (error != null || value?.isEmpty == true) return@addSnapshotListener
+            if (error != null) return@addSnapshotListener
 
             val categories = value?.documents?.map {
-                it.toObject<CategoryDto>()?.let { it.toEntity() } ?: Category.defaultInstance
+                it.toObject<CategoryDto>()?.toEntity() ?: Category.defaultInstance
             } ?: emptyList()
             trySend(categories)
         }
