@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Badge
@@ -38,6 +40,7 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -133,10 +136,12 @@ fun DetailsContent(component: DetailsComponent) {
                             state = pagerState,
                         ) { page ->
                             SubcomposeAsyncImage(
+                                modifier = Modifier
+                                    .padding(3.dp)
+                                    .fillMaxSize(),
                                 model = model.product.pictures[page],
                                 contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
+                                contentScale = ContentScale.Fit,
                                 loading = {
                                     Box(
                                         Modifier.fillMaxSize(),
@@ -155,10 +160,20 @@ fun DetailsContent(component: DetailsComponent) {
                     if (model.product.discount > 0.0) {
                         DiscountSpace(model.product.discount)
                     }
+                    if (model.isAdmin) {
+                        IconButton(
+                            onClick = {
+                                component.onClickEditProduct()
+                            },
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null)
+                        }
+                    }
                 }
             }
             item(span = { GridItemSpan(2) }) {
-                HorizontalDivider(color = Color.Yellow, thickness = 10.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 10.dp)
             }
             item(span = { GridItemSpan(2) }) {
                 Card(
@@ -171,7 +186,10 @@ fun DetailsContent(component: DetailsComponent) {
                         modifier = Modifier.padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(text = priceAnnotatedString(model.product))
+                        Row {
+                            Text("${stringResource(R.string.price)}: ")
+                            Text(text = priceAnnotatedString(model.product))
+                        }
                         Text(text = quantityString(model.product))
                         Text(
                             text = model.product.description,
@@ -201,6 +219,7 @@ fun DetailsContent(component: DetailsComponent) {
             ) { product ->
                 ProductItem(
                     product = product,
+                    isInBasket = false,
                     modifier = Modifier.padding(5.dp),
                     onClickProduct = { component.onClickProduct(product) },
                     onClickAddToBasket = {}
@@ -212,8 +231,6 @@ fun DetailsContent(component: DetailsComponent) {
         }
     }
 }
-
-
 
 
 @Composable
