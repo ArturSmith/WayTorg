@@ -10,6 +10,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 fun ComponentContext.componentScope(): CoroutineScope = CoroutineScope(
     Dispatchers.Main.immediate + SupervisorJob()
@@ -19,9 +22,8 @@ fun ComponentContext.componentScope(): CoroutineScope = CoroutineScope(
 
 fun CreateProductStore.State.asInitial() = (this as CreateProductStore.State.Initial)
 
-
-
-
+fun Long.convertToDataFormat() =
+    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(this))
 
 
 
