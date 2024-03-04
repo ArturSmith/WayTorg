@@ -28,6 +28,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowCircleRight
+import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -230,7 +232,10 @@ private fun InitialState(
                 component.onClickCreate()
             },
         ) {
-            Text(stringResource(R.string.create), color = Color.Black)
+            Text(
+                if (state.isEditing()) stringResource(R.string.edit) else stringResource(R.string.create),
+                color = Color.Black
+            )
         }
         Spacer(modifier = Modifier.height(10.dp))
     }

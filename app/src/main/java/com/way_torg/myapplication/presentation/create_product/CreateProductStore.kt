@@ -3,6 +3,7 @@ package com.way_torg.myapplication.presentation.create_product
 import android.net.Uri
 import com.arkivanov.mvikotlin.core.store.Store
 import com.way_torg.myapplication.domain.entity.Category
+import com.way_torg.myapplication.domain.entity.Product
 
 interface CreateProductStore :
     Store<CreateProductStore.Intent, CreateProductStore.State, CreateProductStore.Label> {
@@ -22,25 +23,25 @@ interface CreateProductStore :
             val isPriceError: Boolean,
             val discount: String,
             val pictures: List<Uri>,
-            val allCategories: List<Category>
+            val allCategories: List<Category>,
+            private val product: Product?
         ) : State {
             fun isAnyRequiredFieldEmpty() = name.isEmpty()
                     || price.isEmpty()
                     || description.isEmpty()
                     || count.isEmpty()
                     || categoryName.isEmpty()
-                    || selectedCategory == null
-                    || categoryName != selectedCategory.name
 
             fun validateFields() = this.copy(
                 isNameError = name.isEmpty(),
                 isPriceError = price.isEmpty(),
                 isDescriptionError = description.isEmpty(),
                 isCountError = count.isEmpty(),
-                isCategoryError = selectedCategory == null
-                        || categoryName.isEmpty()
-                        || categoryName != selectedCategory.name
+                isCategoryError = categoryName.isEmpty()
             )
+
+            fun getProduct() = product
+            fun isEditing() = product != null
 
         }
 

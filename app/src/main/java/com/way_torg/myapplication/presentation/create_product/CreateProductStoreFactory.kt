@@ -2,6 +2,7 @@ package com.way_torg.myapplication.presentation.create_product
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -12,7 +13,10 @@ import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.Product
 import com.way_torg.myapplication.domain.use_case.CreateCategoryUseCase
 import com.way_torg.myapplication.domain.use_case.CreateProductUseCase
+import com.way_torg.myapplication.domain.use_case.EditProductUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllCategoriesFromRemoteDbUseCase
+import com.way_torg.myapplication.domain.use_case.GetProductsFromBasketUseCase
+import com.way_torg.myapplication.extensions.addNew
 import com.way_torg.myapplication.extensions.asInitial
 import com.way_torg.myapplication.extensions.getOrCreateCategory
 import com.way_torg.myapplication.extensions.toNewDouble
@@ -24,33 +28,37 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.random.Random
 
 class CreateProductStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val context: Context,
     private val createProductUseCase: CreateProductUseCase,
+    private val editProductUseCase: EditProductUseCase,
     private val createCategoryUseCase: CreateCategoryUseCase,
-    private val getAllCategoriesFromRemoteDbUseCase: GetAllCategoriesFromRemoteDbUseCase
+    private val getAllCategoriesFromRemoteDbUseCase: GetAllCategoriesFromRemoteDbUseCase,
 ) {
-    fun create(): CreateProductStore = object : CreateProductStore,
+    fun create(product: Product?): CreateProductStore = object : CreateProductStore,
         Store<CreateProductStore.Intent, CreateProductStore.State, CreateProductStore.Label>
         by storeFactory.create(
             name = "CreateProductStore",
             initialState = CreateProductStore.State.Initial(
-                name = "",
-                selectedCategory = null,
-                categoryName = context.resources.getString(R.string.category),
-                description = "",
-                count = "",
-                price = "",
-                discount = "",
+                name = product?.name ?: "",
+                selectedCategory = product?.category,
+                categoryName =
+                product?.category?.name ?: context.resources.getString(R.string.category),
+                description = product?.description ?: "",
+                count = product?.count?.toString() ?: "",
+                price = product?.price?.toString() ?: "",
+                discount = product?.discount?.toString() ?: "",
                 pictures = emptyList(),
                 allCategories = emptyList(),
                 isCategoryError = false,
                 isCountError = false,
                 isDescriptionError = false,
                 isNameError = false,
-                isPriceError = false
+                isPriceError = false,
+                product = product
             ),
             reducer = ReducerImpl,
             executorFactory = ::ExecutorImpl,
@@ -107,35 +115,40 @@ class CreateProductStoreFactory @Inject constructor(
                     if (state.isAnyRequiredFieldEmpty()) {
                         dispatch(Msg.ValidateFields)
                     } else {
-                        dispatch(Msg.Loading)
                         scope.launch {
+                            dispatch(Msg.Loading)
+
                             val category =
-                                getOrCreateCategory(state.allCategories, state.categoryName.trim())
+                                if (state.getProduct() != null) state.getProduct()?.category
+                                else getOrCreateCategory(
+                                    state.allCategories,
+                                    state.categoryName.trim()
+                                )
                             if (category == null) {
                                 dispatch(Msg.Error)
                                 return@launch
+                            }
+                            val product = Product(
+                                id = state.getProduct()?.id ?: UUID.randomUUID().toString(),
+                                name = state.name.trim(),
+                                serialNumber = Random.nextInt(1000000, Int.MAX_VALUE),
+                                category = category,
+                                description = state.description.trim(),
+                                count = state.count.toNewInt(),
+                                price = state.price.toNewDouble(),
+                                discount = state.discount.toNewDouble(),
+                                pictures = state.getProduct()?.pictures ?: emptyList(),
+                                rating = 0.0
+                            )
+                            val result =
+                                if (state.getProduct() != null) async { editProductUseCase(product) }.await()
+                                else async { createProductUseCase(product, state.pictures) }.await()
+                            if (result.isFailure) {
+                                dispatch(Msg.Error)
                             } else {
-                                val product = Product(
-                                    id = UUID.randomUUID().toString(),
-                                    name = state.name.trim(),
-                                    category = category,
-                                    description = state.description.trim(),
-                                    count = state.count.toNewInt(),
-                                    price = state.price.toNewDouble(),
-                                    discount = state.discount.toNewDouble(),
-                                    pictures = emptyList(),
-                                    rating = 0.0
-                                )
-                                val result =
-                                    async { createProductUseCase(product, state.pictures) }.await()
-
-                                if (result.isFailure) {
-                                    dispatch(Msg.Error)
-                                } else {
-                                    dispatch(Msg.Success)
-                                    delay(500)
-                                    publish(CreateProductStore.Label.OnProductCreated)
-                                }
+                                dispatch(Msg.Success)
+                                delay(500)
+                                publish(CreateProductStore.Label.OnProductCreated)
                             }
                         }
                     }
@@ -200,7 +213,7 @@ class CreateProductStoreFactory @Inject constructor(
         private fun CreateProductStore.State.Initial.reduceInitial(msg: Msg): CreateProductStore.State =
             when (msg) {
                 is Msg.OnClickAddPictures -> {
-                    copy(pictures = msg.pictures)
+                    copy(pictures = pictures.addNew(msg.pictures))
                 }
 
                 is Msg.OnCategorySelected -> {
