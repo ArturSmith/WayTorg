@@ -7,11 +7,11 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
-import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.decompose.value.Value
 import com.way_torg.myapplication.domain.entity.Product
 import com.way_torg.myapplication.presentation.basket.DefaultBasketComponent
+import com.way_torg.myapplication.presentation.order.DefaultOrdersComponent
 import com.way_torg.myapplication.presentation.create_product.DefaultCreateProductComponent
 import com.way_torg.myapplication.presentation.details.DefaultDetailsComponent
 import com.way_torg.myapplication.presentation.home.DefaultHomeComponent
@@ -25,6 +25,7 @@ class DefaultRootComponent @AssistedInject constructor(
     private val createProductComponentFactory: DefaultCreateProductComponent.Factory,
     private val detailsComponentFactory: DefaultDetailsComponent.Factory,
     private val basketComponentFactory: DefaultBasketComponent.Factory,
+    private val chatComponentFactory: DefaultOrdersComponent.Factory,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RootComponent, ComponentContext by componentContext {
 
@@ -38,9 +39,10 @@ class DefaultRootComponent @AssistedInject constructor(
     )
 
     private fun child(config: Config, componentContext: ComponentContext): RootComponent.Child {
-        return when (config) {
-            Config.CreateProduct -> {
+        return when (val localConfig = config) {
+            is Config.CreateProduct -> {
                 val component = createProductComponentFactory.create(
+                    product = localConfig.product,
                     componentContext = componentContext,
                     onClickBack = {
                         navigation.pop()
@@ -52,16 +54,18 @@ class DefaultRootComponent @AssistedInject constructor(
                 RootComponent.Child.CreateProduct(component = component)
             }
 
-            Config.Home -> {
+            is Config.Home -> {
                 val component = homeComponentFactory.create(
                     componentContext = componentContext,
                     onClickCreateProduct = {
-                        navigation.push(Config.CreateProduct)
+                        navigation.push(Config.CreateProduct(null))
                     },
                     onClickProduct = {
                         navigation.push(Config.Details(it))
                     },
-                    onClickChat = {},
+                    onClickChat = {
+                        navigation.push(Config.Chat)
+                    },
                     onClickBasket = {
                         navigation.push(Config.Basket)
                     }
@@ -72,7 +76,7 @@ class DefaultRootComponent @AssistedInject constructor(
             is Config.Details -> {
                 val component = detailsComponentFactory.create(
                     componentContext = componentContext,
-                    product = config.product,
+                    product = localConfig.product,
                     onClickBack = {
                         navigation.pop()
                     },
@@ -81,6 +85,9 @@ class DefaultRootComponent @AssistedInject constructor(
                     },
                     onClickProduct = {
                         navigation.replaceCurrent(Config.Details(it))
+                    },
+                    onClickEditProduct = {
+                        navigation.push(Config.CreateProduct(it))
                     }
                 )
                 RootComponent.Child.Details(component = component)
@@ -98,6 +105,16 @@ class DefaultRootComponent @AssistedInject constructor(
                 )
                 RootComponent.Child.Basket(component = component)
             }
+
+            Config.Chat -> {
+                val component = chatComponentFactory.create(
+                    componentContext = componentContext,
+                    onClickBack = {
+                        navigation.pop()
+                    }
+                )
+                RootComponent.Child.Chat(component = component)
+            }
         }
     }
 
@@ -107,13 +124,16 @@ class DefaultRootComponent @AssistedInject constructor(
         data object Home : Config
 
         @Parcelize
-        data object CreateProduct : Config
+        data class CreateProduct(val product: Product?) : Config
 
         @Parcelize
         data class Details(val product: Product) : Config
 
         @Parcelize
         data object Basket : Config
+
+        @Parcelize
+        data object Chat : Config
     }
 
     @AssistedFactory
