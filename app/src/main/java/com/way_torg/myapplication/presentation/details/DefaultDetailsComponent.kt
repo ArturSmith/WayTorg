@@ -14,6 +14,7 @@ class DefaultDetailsComponent @AssistedInject constructor(
     private val storeFactory: DetailsStoreFactory,
     @Assisted("product") private val product: Product,
     @Assisted("componentContext") componentContext: ComponentContext,
+    @Assisted("onClickEditProduct") private val onClickEditProduct: (product: Product) -> Unit,
     @Assisted("onClickBasket") private val onClickBasket: () -> Unit,
     @Assisted("onClickProduct") private val onClickProduct: (product: Product) -> Unit,
     @Assisted("onClickBack") private val onClickBack: () -> Unit
@@ -41,10 +42,15 @@ class DefaultDetailsComponent @AssistedInject constructor(
         onClickBack.invoke()
     }
 
+    override fun onClickEditProduct() {
+        onClickEditProduct.invoke(product)
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext,
+            @Assisted("onClickEditProduct") onClickEditProduct: (product: Product) -> Unit,
             @Assisted("onClickBasket") onClickBasket: () -> Unit,
             @Assisted("onClickProduct") onClickProduct: (product: Product) -> Unit,
             @Assisted("onClickBack") onClickBack: () -> Unit,
