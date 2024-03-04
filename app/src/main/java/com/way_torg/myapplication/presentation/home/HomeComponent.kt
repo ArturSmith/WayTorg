@@ -12,8 +12,12 @@ interface HomeComponent {
     fun onClickBasket()
     fun onClickChat()
     fun onClickCreateProduct()
-    fun onClickSelectedCategory(category: Category )
+    fun onClickSelectedCategory(category: Category)
     fun onClickUnselectedCategory(category: Category)
     fun onClickAddToBasket(product: Product)
+    fun onClickAuthButton()
+    fun changeAuthDialogVisibility()
+    fun onClickLogin()
+    fun onPasswordValueChangeListener(value:String)
 
 }
