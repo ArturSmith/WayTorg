@@ -2,12 +2,16 @@ package com.way_torg.myapplication.presentation.basket
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
+import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.way_torg.myapplication.domain.entity.CustomerInfo
 import com.way_torg.myapplication.domain.entity.Product
+import com.way_torg.myapplication.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
 class DefaultBasketComponent @AssistedInject constructor(
     private val storeFactory: BasketStoreFactory,
@@ -20,6 +24,18 @@ class DefaultBasketComponent @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model = store.stateFlow
+
+    init {
+        componentScope().launch {
+            store.labels.collect {
+                when (it) {
+                    BasketStore.Label.OrderMade -> {
+                        onClickBack()
+                    }
+                }
+            }
+        }
+    }
 
     override fun increaseQuantity(productId: String) {
         store.accept(BasketStore.Intent.IncreaseQuantity(productId))
@@ -51,6 +67,26 @@ class DefaultBasketComponent @AssistedInject constructor(
 
     override fun onClickBack() {
         onClickBack.invoke()
+    }
+
+    override fun setCustomerName(name: String) {
+        store.accept(BasketStore.Intent.SetCustomerName(name))
+    }
+
+    override fun setCustomerAddress(address: String) {
+        store.accept(BasketStore.Intent.SetCustomerAddress(address))
+    }
+
+    override fun setCustomerContact(contact: String) {
+        store.accept(BasketStore.Intent.SetCustomerContact(contact))
+    }
+
+    override fun setCustomerMessage(message: String) {
+        store.accept(BasketStore.Intent.SetCustomerMessage(message))
+    }
+
+    override fun onClickCustomer(customerInfo: CustomerInfo) {
+        store.accept(BasketStore.Intent.OnClickCustomer(customerInfo))
     }
 
     @AssistedFactory
