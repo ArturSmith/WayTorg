@@ -10,4 +10,5 @@ interface DetailsComponent {
     fun onClickAddToBasket(product: Product)
     fun onClickProduct(product: Product)
     fun onClickBack()
+    fun onClickEditProduct()
 }
