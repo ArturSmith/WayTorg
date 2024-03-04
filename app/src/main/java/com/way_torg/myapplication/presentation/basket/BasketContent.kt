@@ -218,27 +218,33 @@ private fun BasketProductItem(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Card(
-                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
                     shape = RoundedCornerShape(3.dp),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
-                    productWrapper.product.pictures.ifNotEmpty(
-                        ifNot = {
-                            SubcomposeAsyncImage(
-                                model = it.first(),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop
-                            )
-                        },
-                        ifYes = {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Image, contentDescription = null)
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize().padding(3.dp)
+                    ) {
+                        productWrapper.product.pictures.ifNotEmpty(
+                            ifNot = {
+                                SubcomposeAsyncImage(
+                                    model = it.first(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Fit
+                                )
+                            },
+                            ifYes = {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Image, contentDescription = null)
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
                 Column(
                     modifier = Modifier.weight(2f).fillMaxHeight(),
@@ -308,37 +314,34 @@ private fun BottomSheet(
         containerColor = Color.White,
         tonalElevation = 10.dp
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(10.dp),
-            contentAlignment = Alignment.TopCenter
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                if (model.customersFromDb.isNotEmpty()) {
-                    item {
+            if (model.customersFromDb.isNotEmpty()) {
+                item {
+                    Text(
+                        stringResource(R.string.choose_one_of_addresses),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                itemsIndexed(
+                    items = model.customersFromDb
+                ) { index, item ->
+                    Card(
+                        modifier = Modifier
+                            .width(TextFieldDefaults.MinWidth)
+                            .clickable {
+                                component.onClickCustomer(item)
+                            },
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+                    ) {
                         Text(
-                            stringResource(R.string.choose_one_of_addresses),
-                            textAlign = TextAlign.Center
+                            text = item.name,
+                            modifier = Modifier.padding(5.dp)
                         )
-                    }
-                    itemsIndexed(
-                        items = model.customersFromDb
-                    ) { index, item ->
-                        Card(
-                            modifier = Modifier
-                                .width(TextFieldDefaults.MinWidth)
-                                .clickable {
-                                    component.onClickCustomer(item)
-                                },
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
-                        ) {
-                            Text(
-                                text = item.name,
-                                modifier = Modifier.padding(5.dp)
-                            )
-                        }
                     }
                 }
                 item {
@@ -391,8 +394,9 @@ private fun BottomSheet(
                 item {
                     Text(
                         stringResource(R.string.items),
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold
+                        textAlign = TextAlign.Start,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(TextFieldDefaults.MinWidth)
                     )
                 }
                 itemsIndexed(items = model.order.products) { index, item ->
@@ -425,19 +429,20 @@ private fun OrderProductItem(
     productWrapper: ProductWrapper,
     number: Int
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        Text(text = "$number. ${productWrapper.product.name} /")
-        Text(text = "${productWrapper.quantity} /")
-        Text(
-            text = "${productWrapper.getTotalPriceWithoutDiscount()}",
-            textDecoration = if (productWrapper.getDiscount() > 0.0) TextDecoration.LineThrough else TextDecoration.None
-        )
+    val annotatedString = buildAnnotatedString {
+        append("$number. ${productWrapper.product.name} \n")
+        append("${stringResource(R.string.quantity)}: ${productWrapper.quantity} \n")
+        append("${stringResource(R.string.price)}: ")
+        withStyle(style = SpanStyle(textDecoration = if (productWrapper.getDiscount() > 0.0) TextDecoration.LineThrough else TextDecoration.None)) {
+            append("${productWrapper.getTotalPriceWithoutDiscount()}")
+        }
         if (productWrapper.getDiscount() > 0.0) {
-            Text(text = "${productWrapper.getTotalPriceWithDiscount()}", color = Color.Red)
+            withStyle(style = SpanStyle(color = Color.Red)) {
+                append(text = " ${productWrapper.getTotalPriceWithDiscount()}")
+            }
         }
     }
+    Text(annotatedString, modifier = Modifier.width(TextFieldDefaults.MinWidth))
 }
 
 @Composable
