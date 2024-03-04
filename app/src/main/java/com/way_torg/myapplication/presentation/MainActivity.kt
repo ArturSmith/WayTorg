@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.arkivanov.decompose.defaultComponentContext
 import com.way_torg.myapplication.presentation.root.DefaultRootComponent
 import com.way_torg.myapplication.presentation.root.RootContent
+import com.way_torg.myapplication.presentation.ui.theme.MyApplicationTheme
 import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
@@ -16,9 +17,11 @@ class MainActivity : ComponentActivity() {
         (applicationContext as WayTorg).applicationComponent.inject(this)
         val root = rootComponentFactory.create(defaultComponentContext())
         setContent {
-            RootContent(
-                component = root
-            )
+            MyApplicationTheme {
+                RootContent(
+                    component = root
+                )
+            }
         }
     }
 }
