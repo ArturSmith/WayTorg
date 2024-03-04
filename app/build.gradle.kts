@@ -83,6 +83,8 @@ dependencies {
     implementation(libs.dagger.core)
     ksp(libs.dagger.compiler)
 
+    implementation(libs.constraints.layout)
+
     implementation(libs.glide.compose)
     implementation(libs.retorfit.core)
     implementation(libs.retorfit.gsonConverter)
@@ -92,4 +94,5 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firestore)
     implementation(libs.storage)
+    implementation(libs.auth)
 }
