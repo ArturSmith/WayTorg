@@ -11,24 +11,32 @@ import com.way_torg.myapplication.domain.use_case.AddProductToBasketUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllCategoriesFromRemoteDbUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllProductsUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllSelectedCategoriesFromLocalDbUseCase
-import com.way_torg.myapplication.domain.use_case.GetCountProductsFromBasketUseCase
+import com.way_torg.myapplication.domain.use_case.GetProductsFromBasketUseCase
 import com.way_torg.myapplication.domain.use_case.SelectCategoryUseCase
+import com.way_torg.myapplication.domain.use_case.SignInUseCase
+import com.way_torg.myapplication.domain.use_case.SignOutUseCase
 import com.way_torg.myapplication.domain.use_case.UnselectCategoryUseCase
+import com.way_torg.myapplication.domain.use_case.getAuthStateUseCase
+import com.way_torg.myapplication.extensions.convertToProductItems
 import com.way_torg.myapplication.extensions.filterByCategory
 import com.way_torg.myapplication.extensions.filterBySelectedCategories
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class HomeStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val getAllProductsUseCase: GetAllProductsUseCase,
-    private val getCountProductsFromBasketUseCase: GetCountProductsFromBasketUseCase,
     private val addProductToBasketUseCase: AddProductToBasketUseCase,
     private val getAllCategoriesFromRemoteDbUseCase: GetAllCategoriesFromRemoteDbUseCase,
     private val getSelectedCategoryUseCase: GetAllSelectedCategoriesFromLocalDbUseCase,
     private val selectCategoryUseCase: SelectCategoryUseCase,
-    private val unselectCategoryUseCase: UnselectCategoryUseCase
+    private val unselectCategoryUseCase: UnselectCategoryUseCase,
+    private val getAuthStateUseCase: getAuthStateUseCase,
+    private val signInUseCase: SignInUseCase,
+    private val signOutUseCase: SignOutUseCase,
+    private val getProductsFromBasketUseCase: GetProductsFromBasketUseCase
 ) {
 
     fun create(): HomeStore =
@@ -41,7 +49,11 @@ class HomeStoreFactory @Inject constructor(
                     filteredProducts = emptyList(),
                     unselectedCategories = emptyList(),
                     selectedCategories = emptyList(),
-                    productsInBasket = 0
+                    productsInBasket = emptyList(),
+                    isContentVisible = false,
+                    isAuthDialogVisible = false,
+                    authState = false,
+                    password = ""
                 ),
                 reducer = ReducerImpl,
                 executorFactory = ::ExecutorImpl,
@@ -52,17 +64,23 @@ class HomeStoreFactory @Inject constructor(
         data class ProductsLoaded(val products: List<Product>) : Action
         data class AllCategoriesLoaded(val categories: List<Category>) : Action
         data class SelectedCategoriesLoaded(val categories: List<Category>) : Action
-        data class CountOfProductsInBasketLoaded(val products: Int) : Action
+        data class ProductsFromBasketLoaded(val products: List<String>) : Action
+        data class AuthStateObserved(val authState: Boolean) : Action
     }
 
     private sealed interface Msg {
 
-        data class ProductsLoaded(val products: List<Product>) : Msg
+        data class SetAllProducts(val products: List<HomeStore.State.ProductItem>) : Msg
         data class AllCategoriesLoaded(val categories: List<Category>) : Msg
         data class SelectedCategoriesLoaded(val categories: List<Category>) : Msg
         data class UnselectedCategoriesSet(val categories: List<Category>) : Msg
-        data class FilteredProductsSet(val products: List<Product>) : Msg
-        data class CountOfProductsInBasketLoaded(val products: Int) : Msg
+        data class FilteredProductsSet(val products: List<HomeStore.State.ProductItem>) : Msg
+        data class SetProductsFromBasket(val products: List<String>) : Msg
+        data class SetVisibility(val value: Boolean) : Msg
+        data class SetFilteredProducts(val products: List<HomeStore.State.ProductItem>) : Msg
+        data object ChangeVisibilityOfAuthDialog : Msg
+        data class SetAuthState(val authState: Boolean) : Msg
+        data class SetPasswordValue(val value: String) : Msg
 
     }
 
@@ -70,6 +88,7 @@ class HomeStoreFactory @Inject constructor(
         CoroutineExecutor<HomeStore.Intent, Action, HomeStore.State, Msg, HomeStore.Label>() {
 
         override fun executeAction(action: Action, getState: () -> HomeStore.State) {
+            val state = getState()
             when (action) {
                 is Action.AllCategoriesLoaded -> {
                     dispatch(Msg.AllCategoriesLoaded(action.categories))
@@ -80,31 +99,77 @@ class HomeStoreFactory @Inject constructor(
                 }
 
                 is Action.ProductsLoaded -> {
-                    dispatch(Msg.ProductsLoaded(action.products))
+                    val filteredProducts = action.products
+                        .convertToProductItems(state.productsInBasket)
+                        .filterByCategory(state.selectedCategories)
+
+                    dispatch(Msg.SetAllProducts(action.products.convertToProductItems(state.productsInBasket)))
+                    dispatch(Msg.SetFilteredProducts(filteredProducts))
+
+                    scope.launch {
+                        delay(500)
+                        dispatch(Msg.SetVisibility(true))
+                    }
                 }
 
-                is Action.CountOfProductsInBasketLoaded -> {
-                    dispatch(Msg.CountOfProductsInBasketLoaded(action.products))
+                is Action.ProductsFromBasketLoaded -> {
+                    dispatch(Msg.SetProductsFromBasket(action.products))
+                }
+
+                is Action.AuthStateObserved -> {
+                    dispatch(Msg.SetAuthState(action.authState))
                 }
             }
         }
 
         override fun executeIntent(intent: HomeStore.Intent, getState: () -> HomeStore.State) {
+            val state = getState()
             when (intent) {
                 is HomeStore.Intent.OnClickAddToBasket -> {
                     scope.launch {
                         addProductToBasketUseCase(intent.product)
                     }
                 }
+
                 is HomeStore.Intent.OnClickUnselectedCategory -> {
                     scope.launch {
                         async { selectCategoryUseCase(intent.category) }.await()
                     }
                 }
+
                 is HomeStore.Intent.OnClickSelectedCategory -> {
                     scope.launch {
                         async { unselectCategoryUseCase(intent.category.id) }.await()
                     }
+                }
+
+                HomeStore.Intent.OnClickAuthButton -> {
+                    if (state.authState) {
+                        scope.launch {
+                            signOutUseCase()
+                        }
+                    } else {
+                        dispatch(Msg.ChangeVisibilityOfAuthDialog)
+                    }
+                }
+
+                HomeStore.Intent.ChangeAuthDialogVisibility -> {
+                    dispatch(Msg.ChangeVisibilityOfAuthDialog)
+                }
+
+                HomeStore.Intent.OnClickLogin -> {
+                    scope.launch {
+                        if (state.password.isNotEmpty()) {
+                            val result = async { signInUseCase(state.password) }.await()
+                            if (result.getOrNull() == true) {
+                                dispatch(Msg.ChangeVisibilityOfAuthDialog)
+                            }
+                        }
+                    }
+                }
+
+                is HomeStore.Intent.OnPasswordValueChangeListener -> {
+                    dispatch(Msg.SetPasswordValue(intent.value))
                 }
             }
         }
@@ -112,16 +177,16 @@ class HomeStoreFactory @Inject constructor(
 
     private object ReducerImpl : Reducer<HomeStore.State, Msg> {
         override fun HomeStore.State.reduce(msg: Msg): HomeStore.State = when (msg) {
-            is Msg.CountOfProductsInBasketLoaded -> {
+            is Msg.SetProductsFromBasket -> {
                 copy(productsInBasket = msg.products)
             }
 
-            is Msg.ProductsLoaded -> {
-                val filteredProducts = msg.products.filterByCategory(selectedCategories)
-                copy(
-                    allProducts = msg.products,
-                    filteredProducts = filteredProducts
-                )
+            is Msg.SetAllProducts -> {
+                copy(allProducts = msg.products)
+            }
+
+            is Msg.SetFilteredProducts -> {
+                copy(filteredProducts = msg.products)
             }
 
             is Msg.SelectedCategoriesLoaded -> {
@@ -152,14 +217,35 @@ class HomeStoreFactory @Inject constructor(
             is Msg.UnselectedCategoriesSet -> {
                 copy(unselectedCategories = msg.categories)
             }
+
+            is Msg.SetVisibility -> {
+                copy(isContentVisible = msg.value)
+            }
+
+            Msg.ChangeVisibilityOfAuthDialog -> {
+                copy(isAuthDialogVisible = !isAuthDialogVisible)
+            }
+
+            is Msg.SetAuthState -> {
+                copy(
+                    authState = msg.authState
+                )
+            }
+
+            is Msg.SetPasswordValue -> {
+                copy(
+                    password = msg.value
+                )
+            }
         }
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
         override fun invoke() {
             scope.launch {
-                getCountProductsFromBasketUseCase().collect {
-                    dispatch(Action.CountOfProductsInBasketLoaded(it))
+                getProductsFromBasketUseCase().collect {
+                    dispatch(Action.ProductsFromBasketLoaded(it))
+
                 }
             }
             scope.launch {
@@ -176,6 +262,11 @@ class HomeStoreFactory @Inject constructor(
             scope.launch {
                 getAllCategoriesFromRemoteDbUseCase().collect {
                     dispatch(Action.AllCategoriesLoaded(it))
+                }
+            }
+            scope.launch {
+                getAuthStateUseCase().collect {
+                    dispatch(Action.AuthStateObserved(it))
                 }
             }
         }
