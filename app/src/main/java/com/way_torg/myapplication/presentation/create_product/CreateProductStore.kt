@@ -26,6 +26,10 @@ interface CreateProductStore :
             val allCategories: List<Category>,
             private val product: Product?
         ) : State {
+
+            val isDeletingEnable: Boolean
+                get() = product != null
+
             fun isAnyRequiredFieldEmpty() = name.isEmpty()
                     || price.isEmpty()
                     || description.isEmpty()
@@ -52,7 +56,7 @@ interface CreateProductStore :
 
 
     sealed interface Label {
-        data object OnProductCreated : Label
+        data object OnNavigateBack : Label
     }
 
 
@@ -67,5 +71,6 @@ interface CreateProductStore :
         data class OnClickAddPictures(val pictures: List<Uri>) : Intent
         data class OnLongClickToPicture(val picture: Uri) : Intent
         data object OnClickCreate : Intent
+        data object OnClickDeleteProduct : Intent
     }
 }

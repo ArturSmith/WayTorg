@@ -24,16 +24,17 @@ import javax.inject.Inject
 
 class ProductRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage,
-    private val appDao: AppDao
+    private val appDao: AppDao,
+    storage: FirebaseStorage
 ) : ProductRepository {
     private val ref = storage.reference
     override suspend fun createProduct(product: Product, uris: List<Uri>): Result<Boolean> {
         return try {
             if (uris.isNotEmpty()) {
-                val paths = mutableListOf<String>()
+                val paths = mutableMapOf<String,String>()
                 uris.forEach { uri ->
-                    val productRef = ref.child("products images/${UUID.randomUUID()}")
+                    val randomID = UUID.randomUUID().toString()
+                    val productRef = ref.child("$PRODUCTS_IMAGES_REF/$randomID")
                     productRef.putFile(uri)
                         .continueWithTask { task ->
                             if (!task.isSuccessful) {
@@ -45,7 +46,7 @@ class ProductRepositoryImpl @Inject constructor(
                         }.addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 task.result?.let {
-                                    paths.add(it.toString())
+                                    paths.put(randomID, it.toString())
                                 }
                             }
                         }.await()
@@ -61,9 +62,13 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteProduct(id: String): Result<Boolean> {
+    override suspend fun deleteProduct(product: Product): Result<Boolean> {
         return try {
-            firestore.collection(PRODUCTS).document(id).delete().await()
+            product.pictures.forEach {
+                val ref = ref.child("$PRODUCTS_IMAGES_REF/${it.key}")
+                ref.delete().await()
+            }
+            firestore.collection(PRODUCTS).document(product.id).delete().await()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
@@ -98,12 +103,16 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun cleanBasket() {
+        appDao.cleanBasket()
+    }
+
     override fun getAllProducts(): Flow<List<Product>> = callbackFlow {
         val observer = firestore.collection(PRODUCTS).addSnapshotListener { value, error ->
-            if (error != null || value?.documents?.isEmpty() == true) return@addSnapshotListener
+            if (error != null) return@addSnapshotListener
 
             val products = value?.documents?.map {
-                it.toObject<ProductDto>()?.let { it.toEntity() } ?: Product.defaultInstance()
+                it.toObject<ProductDto>()?.toEntity() ?: Product.defaultInstance()
             } ?: emptyList()
             trySend(products)
         }
@@ -120,17 +129,18 @@ class ProductRepositoryImpl @Inject constructor(
             it.map { it.id }
         }
 
-    override suspend fun getProductsById(ids: List<String>) = if (ids.isNotEmpty()) {
-        firestore.collection(PRODUCTS)
-            .whereIn(Product.ID, ids)
-            .get()
-            .await()
-            .documents
-            .map {
-                it.toObject<ProductDto>()?.let { it.toEntity() }
-                    ?: Product.defaultInstance()
-            }
-    } else emptyList()
+    override suspend fun getProductsById(ids: List<String>) =
+        if (ids.isNotEmpty()) {
+            firestore.collection(PRODUCTS)
+                .whereIn(Product.ID, ids)
+                .get()
+                .await()
+                .documents
+                .map {
+                    it.toObject<ProductDto>()?.let { it.toEntity() }
+                        ?: Product.defaultInstance()
+                }
+        } else emptyList()
 
 
     override fun getCountOfProductsFromBasket() = appDao.getCountOfProducts()
@@ -138,5 +148,6 @@ class ProductRepositoryImpl @Inject constructor(
 
     private companion object {
         const val PRODUCTS = "products"
+        const val PRODUCTS_IMAGES_REF = "products images"
     }
 }

@@ -33,7 +33,7 @@ class DefaultCreateProductComponent @AssistedInject constructor(
         componentScope().launch {
             store.labels.collect {
                 when (it) {
-                    CreateProductStore.Label.OnProductCreated -> {
+                    CreateProductStore.Label.OnNavigateBack -> {
                         onProductSaved.invoke()
                     }
                 }
@@ -83,6 +83,10 @@ class DefaultCreateProductComponent @AssistedInject constructor(
 
     override fun onSetNewCategory(text: String) {
         store.accept(CreateProductStore.Intent.OnSetNewCategory(text))
+    }
+
+    override fun onClickDelete() {
+        store.accept(CreateProductStore.Intent.OnClickDeleteProduct)
     }
 
     @AssistedFactory

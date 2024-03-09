@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowCircleRight
 import androidx.compose.material.icons.filled.ArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -72,6 +73,38 @@ fun CreateProductContent(
     component: CreateProductComponent
 ) {
     val model by component.model.collectAsState()
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        when (val state = model) {
+            is CreateProductStore.State.Initial -> {
+                InitialState(state, component)
+            }
+
+            CreateProductStore.State.Error -> {
+                ErrorState(state)
+            }
+
+            CreateProductStore.State.Loading -> {
+                LoadingState(state)
+            }
+
+            CreateProductStore.State.Success -> {
+                SuccessState(state)
+            }
+        }
+    }
+
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun InitialState(
+    state: CreateProductStore.State.Initial,
+    component: CreateProductComponent
+) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -86,158 +119,140 @@ fun CreateProductContent(
                         )
                     }
                 },
+                actions = {
+                    if (state.isDeletingEnable) {
+                        IconButton({
+                            component.onClickDelete()
+                        }) {
+                            Icon(Icons.Filled.Delete, contentDescription = null)
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         },
         containerColor = Color.White
     ) {
-        Box(
-            modifier = Modifier.padding(it).fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+                .verticalScroll(state = rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            when (val state = model) {
-                is CreateProductStore.State.Initial -> {
-                    InitialState(state, component)
-                }
-
-                CreateProductStore.State.Error -> {
-                    ErrorState(state)
-                }
-
-                CreateProductStore.State.Loading -> {
-                    LoadingState(state)
-                }
-
-                CreateProductStore.State.Success -> {
-                    SuccessState(state)
-                }
+            OutlinedTextField(
+                value = state.name,
+                placeholder = { Text(stringResource(R.string.name)) },
+                onValueChange = {
+                    component.onSetName(it)
+                },
+                isError = state.isNameError
+            )
+            OutlinedTextField(
+                value = state.description,
+                placeholder = { Text(stringResource(R.string.description)) },
+                onValueChange = {
+                    component.onSetDescription(it)
+                },
+                modifier = Modifier.height(100.dp).widthIn(max = TextFieldDefaults.MinWidth),
+                isError = state.isDescriptionError
+            )
+            OutlinedTextField(
+                value = state.count,
+                placeholder = { Text(stringResource(R.string.count)) },
+                onValueChange = {
+                    component.onSetCount(it)
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
+                isError = state.isCountError
+            )
+            OutlinedTextField(
+                value = state.price,
+                placeholder = { Text(stringResource(R.string.price)) },
+                onValueChange = {
+                    component.onSetPrice(it)
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
+                isError = state.isPriceError
+            )
+            OutlinedTextField(
+                value = state.discount,
+                placeholder = { Text(stringResource(R.string.discount)) },
+                onValueChange = {
+                    component.onSetDiscount(it)
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                )
+            )
+            if (state.isCategoryError) {
+                Text(
+                    text = stringResource(R.string.select_category),
+                    color = Color.Red
+                )
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun InitialState(
-    state: CreateProductStore.State.Initial,
-    component: CreateProductComponent
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(state = rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        OutlinedTextField(
-            value = state.name,
-            placeholder = { Text(stringResource(R.string.name)) },
-            onValueChange = {
-                component.onSetName(it)
-            },
-            isError = state.isNameError
-        )
-        OutlinedTextField(
-            value = state.description,
-            placeholder = { Text(stringResource(R.string.description)) },
-            onValueChange = {
-                component.onSetDescription(it)
-            },
-            modifier = Modifier.height(100.dp).widthIn(max = TextFieldDefaults.MinWidth),
-            isError = state.isDescriptionError
-        )
-        OutlinedTextField(
-            value = state.count,
-            placeholder = { Text(stringResource(R.string.count)) },
-            onValueChange = {
-                component.onSetCount(it)
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            ),
-            isError = state.isCountError
-        )
-        OutlinedTextField(
-            value = state.price,
-            placeholder = { Text(stringResource(R.string.price)) },
-            onValueChange = {
-                component.onSetPrice(it)
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            ),
-            isError = state.isPriceError
-        )
-        OutlinedTextField(
-            value = state.discount,
-            placeholder = { Text(stringResource(R.string.discount)) },
-            onValueChange = {
-                component.onSetDiscount(it)
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
+            Categories(
+                categories = state.allCategories,
+                categoryName = state.categoryName,
+                onSelected = { component.onCategorySelected(it) },
+                onSetNewCategory = { component.onSetNewCategory(it) }
             )
-        )
-        if (state.isCategoryError) {
-            Text(
-                text = stringResource(R.string.select_category),
-                color = Color.Red
-            )
-        }
-        Categories(
-            categories = state.allCategories,
-            categoryName = state.categoryName,
-            onSelected = { component.onCategorySelected(it) },
-            onSetNewCategory = { component.onSetNewCategory(it) }
-        )
-        if (state.pictures.isNotEmpty()) {
-            Text(
-                stringResource(R.string.long_click_to_delete_pic),
-                textAlign = TextAlign.Center,
-                fontSize = 18.sp,
-                color = Color.Gray
-            )
-            LazyRow(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(
-                    items = state.pictures
+            if (state.pictures.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.long_click_to_delete_pic),
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp,
+                    color = Color.Gray
+                )
+                LazyRow(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    AsyncImage(
-                        model = it,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(200.dp).combinedClickable(
-                            onClick = {},
-                            onLongClick = {
-                                component.onLongClickToPicture(it)
-                            }
+                    items(
+                        items = state.pictures
+                    ) {
+                        AsyncImage(
+                            model = it,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(200.dp).combinedClickable(
+                                onClick = {},
+                                onLongClick = {
+                                    component.onLongClickToPicture(it)
+                                }
+                            )
                         )
-                    )
+                    }
                 }
+            } else {
+                Text(
+                    stringResource(R.string.no_selected_pictures),
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp,
+                    color = Color.Gray
+                )
             }
-        } else {
-            Text(
-                stringResource(R.string.no_selected_pictures),
-                textAlign = TextAlign.Center,
-                fontSize = 18.sp,
-                color = Color.Gray
-            )
+            TakePicturesFromGalery {
+                component.onClickAddPictures(it)
+            }
+            Spacer(Modifier.weight(1f))
+            OutlinedButton(
+                onClick = {
+                    component.onClickCreate()
+                },
+            ) {
+                Text(
+                    if (state.isEditing()) stringResource(R.string.edit) else stringResource(R.string.create),
+                    color = Color.Black
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
         }
-        TakePicturesFromGalery {
-            component.onClickAddPictures(it)
-        }
-        Spacer(Modifier.weight(1f))
-        OutlinedButton(
-            onClick = {
-                component.onClickCreate()
-            },
-        ) {
-            Text(
-                if (state.isEditing()) stringResource(R.string.edit) else stringResource(R.string.create),
-                color = Color.Black
-            )
-        }
-        Spacer(modifier = Modifier.height(10.dp))
     }
 
 }

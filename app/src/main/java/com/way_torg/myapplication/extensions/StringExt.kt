@@ -18,8 +18,8 @@ fun String.toNewDouble(): Double {
     }
 }
 
-suspend fun String.getOrCreateCategory(
+ inline fun String.getOrCreateCategory(
     categories: List<Category>,
-    predicate: suspend () -> Category?
+    predicate: () -> Category?
 ) = categories.find { it.name == this } ?: predicate()
 

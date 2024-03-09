@@ -5,5 +5,5 @@ import com.way_torg.myapplication.domain.repository.ProductRepository
 import javax.inject.Inject
 
 data class DeleteProductUseCase @Inject constructor(private val repository: ProductRepository) {
-    suspend operator fun invoke(id:String) = repository.deleteProduct(id)
+    suspend operator fun invoke(product: Product) = repository.deleteProduct(product)
 }

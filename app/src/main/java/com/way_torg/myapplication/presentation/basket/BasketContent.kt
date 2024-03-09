@@ -230,7 +230,7 @@ private fun BasketProductItem(
                         productWrapper.product.pictures.ifNotEmpty(
                             ifNot = {
                                 SubcomposeAsyncImage(
-                                    model = it.first(),
+                                    model = it.values,
                                     contentDescription = null,
                                     contentScale = ContentScale.Fit
                                 )

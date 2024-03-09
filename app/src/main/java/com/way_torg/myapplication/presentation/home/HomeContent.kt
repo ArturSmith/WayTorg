@@ -14,27 +14,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.ShoppingBasket
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -43,13 +38,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,7 +58,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.presentation.ui.elements.ProductItem
@@ -73,7 +68,9 @@ fun HomeContent(
     component: HomeComponent
 ) {
     val model by component.model.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val mainAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     if (model.isAuthDialogVisible) {
         AuthDialog(
             value = model.password,
@@ -115,6 +112,11 @@ fun HomeContent(
                                 contentDescription = null
                             )
                         }
+                        IconButton({
+                            TODO()
+                        }) {
+                            Icon(Icons.Filled.Language, contentDescription = null)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults
@@ -122,11 +124,11 @@ fun HomeContent(
                         containerColor =
                         MaterialTheme.colorScheme.primary
                     ),
-                scrollBehavior = scrollBehavior
+                scrollBehavior = mainAppBarScrollBehavior
             )
         },
         containerColor = Color.White,
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(mainAppBarScrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             Box(
                 modifier = Modifier
@@ -157,55 +159,64 @@ fun HomeContent(
         },
         floatingActionButtonPosition = FabPosition.End
     ) {
+        Content(model, component, it)
+    }
+}
 
-        Column(
-            Modifier
-                .padding(it)
-                .fillMaxSize(),
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Content(
+    model: HomeStore.State,
+    component: HomeComponent,
+    paddingValues: PaddingValues,
+) {
+    Column(
+        Modifier
+            .padding(paddingValues)
+            .fillMaxSize(),
+    ) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(horizontal = 10.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(horizontal = 10.dp),
-                modifier = Modifier.fillMaxWidth()
+            items(
+                items = model.unselectedCategories
             ) {
-                items(
-                    items = model.unselectedCategories
-                ) {
-                    CategoryCard(it, false) {
-                        component.onClickUnselectedCategory(it)
-                    }
+                CategoryCard(it, false) {
+                    component.onClickUnselectedCategory(it)
                 }
             }
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(horizontal = 10.dp)
+        }
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(horizontal = 10.dp)
+        ) {
+            items(
+                items = model.selectedCategories
             ) {
-                items(
-                    items = model.selectedCategories
-                ) {
-                    CategoryCard(it, true) {
-                        component.onClickSelectedCategory(it)
-                    }
+                CategoryCard(it, true) {
+                    component.onClickSelectedCategory(it)
                 }
             }
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+        }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(
+                items = model.filteredProducts,
             ) {
-                items(
-                    items = model.filteredProducts,
-                ) {
-                    AnimatedVisibility(model.isContentVisible) {
-                        ProductItem(
-                            it.product,
-                            isInBasket = it.isInBasket,
-                            modifier = Modifier,
-                            onClickProduct = { component.onClickProduct(it.product) },
-                            onClickAddToBasket = { component.onClickAddToBasket(it.product) }
-                        )
-                    }
+                AnimatedVisibility(model.isContentVisible) {
+                    ProductItem(
+                        it.product,
+                        isInBasket = it.isInBasket,
+                        modifier = Modifier,
+                        onClickProduct = { component.onClickProduct(it.product) },
+                        onClickAddToBasket = { component.onClickAddToBasket(it.product) }
+                    )
                 }
             }
         }

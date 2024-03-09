@@ -22,7 +22,7 @@ fun ComponentContext.componentScope(): CoroutineScope = CoroutineScope(
 
 fun CreateProductStore.State.asInitial() = (this as CreateProductStore.State.Initial)
 
-fun Long.convertToDataFormat() =
+fun Long.convertToDataFormat(): String =
     SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(this))
 
 

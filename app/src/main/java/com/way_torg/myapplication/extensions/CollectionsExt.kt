@@ -2,12 +2,14 @@ package com.way_torg.myapplication.extensions
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.CustomerInfo
 import com.way_torg.myapplication.domain.entity.Order
 import com.way_torg.myapplication.domain.entity.Product
 import com.way_torg.myapplication.domain.entity.ProductWrapper
 import com.way_torg.myapplication.presentation.home.HomeStore
+import org.checkerframework.checker.units.qual.K
 
 fun List<HomeStore.State.ProductItem>.filterByCategory(categories: List<Category>): List<HomeStore.State.ProductItem> {
     return if (categories.isEmpty()) this
@@ -19,9 +21,9 @@ fun List<Category>.filterBySelectedCategories(selectedList: List<Category>): Lis
 }
 
 @Composable
-inline fun <T> Collection<T>.ifNotEmpty(
-    ifYes: @Composable (list: Collection<T>) -> Unit = {},
-    ifNot: @Composable (list: Collection<T>) -> Unit
+inline fun <T, K> Map<T, K>.ifNotEmpty(
+    ifYes: @Composable (list: Map<T, K>) -> Unit = {},
+    ifNot: @Composable (list: Map<T, K>) -> Unit
 ) {
     if (isNotEmpty()) {
         ifNot(this)
@@ -29,6 +31,8 @@ inline fun <T> Collection<T>.ifNotEmpty(
         ifYes(this)
     }
 }
+
+
 
 
 fun List<Product>.toWrapper() = this.map {

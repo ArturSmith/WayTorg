@@ -18,4 +18,5 @@ interface CreateProductComponent {
     fun onSetNewCategory(text:String)
     fun onClickBack()
     fun onClickCreate()
+    fun onClickDelete()
 }

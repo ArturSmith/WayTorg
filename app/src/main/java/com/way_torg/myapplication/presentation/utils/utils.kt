@@ -45,3 +45,5 @@ fun quantityString(product: Product) = buildAnnotatedString {
         }
     }
 }
+
+

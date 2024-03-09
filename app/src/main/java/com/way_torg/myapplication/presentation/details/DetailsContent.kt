@@ -135,11 +135,12 @@ fun DetailsContent(component: DetailsComponent) {
                         HorizontalPager(
                             state = pagerState,
                         ) { page ->
+                            val pictures = model.product.pictures.values.toList()
                             SubcomposeAsyncImage(
                                 modifier = Modifier
                                     .padding(3.dp)
                                     .fillMaxSize(),
-                                model = model.product.pictures[page],
+                                model = pictures[page],
                                 contentDescription = null,
                                 contentScale = ContentScale.Fit,
                                 loading = {

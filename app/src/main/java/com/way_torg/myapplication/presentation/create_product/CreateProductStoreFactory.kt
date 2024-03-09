@@ -2,7 +2,6 @@ package com.way_torg.myapplication.presentation.create_product
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -13,9 +12,9 @@ import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.Product
 import com.way_torg.myapplication.domain.use_case.CreateCategoryUseCase
 import com.way_torg.myapplication.domain.use_case.CreateProductUseCase
+import com.way_torg.myapplication.domain.use_case.DeleteProductUseCase
 import com.way_torg.myapplication.domain.use_case.EditProductUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllCategoriesFromRemoteDbUseCase
-import com.way_torg.myapplication.domain.use_case.GetProductsFromBasketUseCase
 import com.way_torg.myapplication.extensions.addNew
 import com.way_torg.myapplication.extensions.asInitial
 import com.way_torg.myapplication.extensions.getOrCreateCategory
@@ -35,6 +34,7 @@ class CreateProductStoreFactory @Inject constructor(
     private val context: Context,
     private val createProductUseCase: CreateProductUseCase,
     private val editProductUseCase: EditProductUseCase,
+    private val deleteProductUseCase: DeleteProductUseCase,
     private val createCategoryUseCase: CreateCategoryUseCase,
     private val getAllCategoriesFromRemoteDbUseCase: GetAllCategoriesFromRemoteDbUseCase,
 ) {
@@ -137,7 +137,7 @@ class CreateProductStoreFactory @Inject constructor(
                                 count = state.count.toNewInt(),
                                 price = state.price.toNewDouble(),
                                 discount = state.discount.toNewDouble(),
-                                pictures = state.getProduct()?.pictures ?: emptyList(),
+                                pictures = state.getProduct()?.pictures ?: emptyMap(),
                                 rating = 0.0
                             )
                             val result =
@@ -148,7 +148,7 @@ class CreateProductStoreFactory @Inject constructor(
                             } else {
                                 dispatch(Msg.Success)
                                 delay(500)
-                                publish(CreateProductStore.Label.OnProductCreated)
+                                publish(CreateProductStore.Label.OnNavigateBack)
                             }
                         }
                     }
@@ -184,6 +184,14 @@ class CreateProductStoreFactory @Inject constructor(
 
                 is CreateProductStore.Intent.OnSetNewCategory -> {
                     dispatch(Msg.OnSetNewCategory(intent.categoryName))
+                }
+
+                CreateProductStore.Intent.OnClickDeleteProduct -> {
+                    scope.launch {
+                        dispatch(Msg.Loading)
+                        deleteProductUseCase(state.getProduct()!!)
+                        publish(CreateProductStore.Label.OnNavigateBack)
+                    }
                 }
             }
         }
