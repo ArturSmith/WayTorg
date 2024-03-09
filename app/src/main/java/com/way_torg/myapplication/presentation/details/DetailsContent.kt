@@ -220,10 +220,8 @@ fun DetailsContent(component: DetailsComponent) {
             ) { product ->
                 ProductItem(
                     product = product,
-                    isInBasket = false,
                     modifier = Modifier.padding(5.dp),
-                    onClickProduct = { component.onClickProduct(product) },
-                    onClickAddToBasket = {}
+                    onClickProduct = { component.onClickProduct(product) }
                 )
             }
             item(span = { GridItemSpan(2) }) {

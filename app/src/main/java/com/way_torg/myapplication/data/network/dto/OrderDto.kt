@@ -23,4 +23,8 @@ class OrderDto() {
         this.orderDate = orderDate
         this.status = status
     }
+
+    companion object{
+        const val STATUS = "status"
+    }
 }

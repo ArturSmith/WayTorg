@@ -16,7 +16,8 @@ interface HomeStore : Store<HomeStore.Intent, HomeStore.State, HomeStore.Label> 
         val isContentVisible: Boolean,
         val password: String,
         val isAuthDialogVisible: Boolean,
-        val authState: Boolean
+        val authState: Boolean,
+        val countOfUnpaidOrders:Int
     ) {
         data class ProductItem(
             val product: Product,

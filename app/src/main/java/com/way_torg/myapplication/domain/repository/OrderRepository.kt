@@ -9,7 +9,9 @@ interface OrderRepository {
     suspend fun createdOrder(order: Order): Result<Boolean>
 
     suspend fun editOrder(order: Order): Result<Boolean>
-    suspend fun deleteOrder(orderId: String):Result<Boolean>
+    suspend fun deleteOrder(orderId: String): Result<Boolean>
     fun getOrders(): Flow<List<Order>>
+
+    fun getCountOfUnpaidOrders(): Flow<Int>
 
 }

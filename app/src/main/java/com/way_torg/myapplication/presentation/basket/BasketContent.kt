@@ -50,11 +50,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -138,7 +140,7 @@ private fun InitialState(model: BasketStore.State.Initial, component: BasketComp
     ) {
         if (model.order.products.isNotEmpty()) {
             LazyColumn(
-                modifier = Modifier.padding(it),
+                modifier = Modifier.padding(it).fillMaxSize(),
                 contentPadding = PaddingValues(10.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp)
             ) {
@@ -193,8 +195,7 @@ private fun BasketProductItem(
         backgroundContent = {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
+                    .fillMaxSize()
                     .background(Color.Red),
                 contentAlignment = Alignment.CenterEnd
             ) {
@@ -210,7 +211,6 @@ private fun BasketProductItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
                     .background(color = Color.White)
                     .clickable {
                         component.onClickProduct(productWrapper.product)
@@ -220,7 +220,7 @@ private fun BasketProductItem(
                 Card(
                     elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
                     shape = RoundedCornerShape(3.dp),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.height(100.dp).weight(1f),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Box(
@@ -230,9 +230,9 @@ private fun BasketProductItem(
                         productWrapper.product.pictures.ifNotEmpty(
                             ifNot = {
                                 SubcomposeAsyncImage(
-                                    model = it.values,
+                                    model = it.values.first(),
                                     contentDescription = null,
-                                    contentScale = ContentScale.Fit
+                                    contentScale = ContentScale.Crop
                                 )
                             },
                             ifYes = {
@@ -248,15 +248,18 @@ private fun BasketProductItem(
                 }
                 Column(
                     modifier = Modifier.weight(2f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text(text = productWrapper.product.name)
+                    Text(
+                        text = productWrapper.product.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Row {
                         Text("${stringResource(R.string.price)}: ")
                         Text(text = priceAnnotatedString(productWrapper.product))
                     }
                     Text(text = "${stringResource(R.string.total_price)}: ${productWrapper.getTotalPriceWithDiscount()}")
-                    Spacer(Modifier.weight(1f))
                     IncreaseDecreaseButtons(
                         modifier = Modifier.align(Alignment.Start),
                         quantity = productWrapper.quantity,
@@ -400,12 +403,13 @@ private fun BottomSheet(
                     )
                 }
                 itemsIndexed(items = model.order.products) { index, item ->
-                    OrderProductItem(item, index + 1)
+                    OrderedProductItem(item, index + 1)
                 }
                 item {
                     Text(
                         text = annotatedTotalPriceString(model),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(TextFieldDefaults.MinWidth)
                     )
                 }
                 item {
@@ -417,6 +421,7 @@ private fun BottomSheet(
                     ) {
                         Text(stringResource(R.string.order))
                     }
+                    Spacer(Modifier.height(100.dp))
                 }
             }
         }
@@ -425,13 +430,11 @@ private fun BottomSheet(
 
 
 @Composable
-private fun OrderProductItem(
+private fun OrderedProductItem(
     productWrapper: ProductWrapper,
     number: Int
 ) {
     val annotatedString = buildAnnotatedString {
-        append("$number. ${productWrapper.product.name} \n")
-        append("${stringResource(R.string.quantity)}: ${productWrapper.quantity} \n")
         append("${stringResource(R.string.price)}: ")
         withStyle(style = SpanStyle(textDecoration = if (productWrapper.getDiscount() > 0.0) TextDecoration.LineThrough else TextDecoration.None)) {
             append("${productWrapper.getTotalPriceWithoutDiscount()}")
@@ -442,20 +445,43 @@ private fun OrderProductItem(
             }
         }
     }
-    Text(annotatedString, modifier = Modifier.width(TextFieldDefaults.MinWidth))
+    Column(
+        modifier = Modifier.width(TextFieldDefaults.MinWidth)
+    ) {
+        Text(
+            "$number. ${productWrapper.product.name}",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            "${stringResource(R.string.quantity)}: ${productWrapper.quantity}",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(annotatedString)
+    }
 }
 
 @Composable
-private fun annotatedTotalPriceString(model: BasketStore.State.Initial) =
-    buildAnnotatedString {
+private fun annotatedTotalPriceString(model: BasketStore.State.Initial): AnnotatedString {
+    val totalPriceWithoutDiscount = String.format("%.2f", model.order.totalPriceWithoutDiscount())
+    val totalDiscount = String.format("%.2f", model.order.totalDiscount())
+    val totalPrice = String.format("%.2f", model.order.totalPriceWithDiscount())
+
+
+    return buildAnnotatedString {
         append("${stringResource(R.string.total_price)}:")
-        append(" ${model.order.totalPriceWithoutDiscount()}")
+        append(" ")
+        append(totalPriceWithoutDiscount)
         if (model.order.totalDiscount() > 0.0) {
+            append(" - ")
             withStyle(style = SpanStyle(color = Color.Red)) {
-                append(" - ${model.order.totalDiscount()}")
+                append(totalDiscount)
             }
+            append(" ")
             withStyle(style = SpanStyle()) {
-                append(" = ${model.order.totalPriceWithDiscount()}")
+                append(totalPrice)
             }
         }
     }
+}

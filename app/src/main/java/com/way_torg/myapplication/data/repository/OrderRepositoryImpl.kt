@@ -64,6 +64,22 @@ class OrderRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getCountOfUnpaidOrders() = callbackFlow {
+        val observer = firestore.collection(ORDERS)
+            .whereEqualTo(OrderDto.STATUS, OrderStatus.UNPAID)
+            .addSnapshotListener { value, error ->
+                if (error != null) return@addSnapshotListener
+
+                val count = value?.documents?.size ?: 0
+                trySend(count)
+            }
+
+        awaitClose {
+            observer.remove()
+            this.cancel()
+        }
+    }
+
     private companion object {
         const val ORDERS = "orders"
     }

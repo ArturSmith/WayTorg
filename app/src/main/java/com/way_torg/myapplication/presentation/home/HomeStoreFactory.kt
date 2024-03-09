@@ -11,6 +11,7 @@ import com.way_torg.myapplication.domain.use_case.AddProductToBasketUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllCategoriesFromRemoteDbUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllProductsUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllSelectedCategoriesFromLocalDbUseCase
+import com.way_torg.myapplication.domain.use_case.GetCountOfUnpaidOrdersUseCase
 import com.way_torg.myapplication.domain.use_case.GetProductsFromBasketUseCase
 import com.way_torg.myapplication.domain.use_case.SelectCategoryUseCase
 import com.way_torg.myapplication.domain.use_case.SignInUseCase
@@ -22,6 +23,7 @@ import com.way_torg.myapplication.extensions.filterByCategory
 import com.way_torg.myapplication.extensions.filterBySelectedCategories
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,7 +38,8 @@ class HomeStoreFactory @Inject constructor(
     private val getAuthStateUseCase: getAuthStateUseCase,
     private val signInUseCase: SignInUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val getProductsFromBasketUseCase: GetProductsFromBasketUseCase
+    private val getProductsFromBasketUseCase: GetProductsFromBasketUseCase,
+    private val getCountOfUnpaidOrdersUseCase: GetCountOfUnpaidOrdersUseCase
 ) {
 
     fun create(): HomeStore =
@@ -53,7 +56,8 @@ class HomeStoreFactory @Inject constructor(
                     isContentVisible = false,
                     isAuthDialogVisible = false,
                     authState = false,
-                    password = ""
+                    password = "",
+                    countOfUnpaidOrders = 0
                 ),
                 reducer = ReducerImpl,
                 executorFactory = ::ExecutorImpl,
@@ -66,6 +70,7 @@ class HomeStoreFactory @Inject constructor(
         data class SelectedCategoriesLoaded(val categories: List<Category>) : Action
         data class ProductsFromBasketLoaded(val products: List<String>) : Action
         data class AuthStateObserved(val authState: Boolean) : Action
+        data class CountOfUnpaidOrdersLoaded(val count: Int) : Action
     }
 
     private sealed interface Msg {
@@ -81,6 +86,7 @@ class HomeStoreFactory @Inject constructor(
         data object ChangeVisibilityOfAuthDialog : Msg
         data class SetAuthState(val authState: Boolean) : Msg
         data class SetPasswordValue(val value: String) : Msg
+        data class SetCountOfUnpaidOrders(val count: Int) : Msg
 
     }
 
@@ -118,6 +124,10 @@ class HomeStoreFactory @Inject constructor(
 
                 is Action.AuthStateObserved -> {
                     dispatch(Msg.SetAuthState(action.authState))
+                }
+
+                is Action.CountOfUnpaidOrdersLoaded -> {
+                    dispatch(Msg.SetCountOfUnpaidOrders(action.count))
                 }
             }
         }
@@ -237,6 +247,12 @@ class HomeStoreFactory @Inject constructor(
                     password = msg.value
                 )
             }
+
+            is Msg.SetCountOfUnpaidOrders -> {
+                copy(
+                    countOfUnpaidOrders = msg.count
+                )
+            }
         }
     }
 
@@ -267,6 +283,11 @@ class HomeStoreFactory @Inject constructor(
             scope.launch {
                 getAuthStateUseCase().collect {
                     dispatch(Action.AuthStateObserved(it))
+                }
+            }
+            scope.launch {
+                getCountOfUnpaidOrdersUseCase().collect {
+                    dispatch(Action.CountOfUnpaidOrdersLoaded(it))
                 }
             }
         }

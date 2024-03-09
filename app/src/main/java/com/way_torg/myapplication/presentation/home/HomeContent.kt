@@ -42,6 +42,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -83,10 +84,8 @@ fun HomeContent(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(stringResource(R.string.AppName))
-                },
+            TopAppBar(
+                title = {},
                 actions = {
                     if (model.authState) {
                         IconButton(
@@ -94,9 +93,18 @@ fun HomeContent(
                         ) {
                             Icon(Icons.Filled.Add, contentDescription = null)
                         }
-                        IconButton(onClick = { component.onClickChat() }) {
+                        BadgedBox(
+                            badge = {
+                                Badge {
+                                    Text(text = model.countOfUnpaidOrders.toString())
+                                }
+                            },
+                            modifier = Modifier
+                                .padding(15.dp)
+                                .clickable { component.onClickChat() }
+                        ) {
                             Icon(
-                                Icons.Filled.Chat,
+                                imageVector = Icons.Filled.Chat,
                                 contentDescription = null
                             )
                         }
@@ -121,10 +129,9 @@ fun HomeContent(
                 },
                 colors = TopAppBarDefaults
                     .centerAlignedTopAppBarColors(
-                        containerColor =
-                        MaterialTheme.colorScheme.primary
+                        containerColor = Color.White
                     ),
-                scrollBehavior = mainAppBarScrollBehavior
+                scrollBehavior = mainAppBarScrollBehavior,
             )
         },
         containerColor = Color.White,
@@ -212,10 +219,8 @@ private fun Content(
                 AnimatedVisibility(model.isContentVisible) {
                     ProductItem(
                         it.product,
-                        isInBasket = it.isInBasket,
                         modifier = Modifier,
-                        onClickProduct = { component.onClickProduct(it.product) },
-                        onClickAddToBasket = { component.onClickAddToBasket(it.product) }
+                        onClickProduct = { component.onClickProduct(it.product) }
                     )
                 }
             }
