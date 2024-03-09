@@ -31,7 +31,7 @@ class ProductRepositoryImpl @Inject constructor(
     override suspend fun createProduct(product: Product, uris: List<Uri>): Result<Boolean> {
         return try {
             if (uris.isNotEmpty()) {
-                val paths = mutableMapOf<String,String>()
+                val paths = mutableMapOf<String, String>()
                 uris.forEach { uri ->
                     val randomID = UUID.randomUUID().toString()
                     val productRef = ref.child("$PRODUCTS_IMAGES_REF/$randomID")
@@ -52,9 +52,9 @@ class ProductRepositoryImpl @Inject constructor(
                         }.await()
                 }
                 val newProduct = product.copy(pictures = paths).toDto()
-                firestore.collection(PRODUCTS).document().set(newProduct).await()
+                firestore.collection(PRODUCTS).document(product.id).set(newProduct).await()
             } else {
-                firestore.collection(PRODUCTS).document().set(product.toDto()).await()
+                firestore.collection(PRODUCTS).document(product.id).set(product.toDto()).await()
             }
             Result.success(true)
         } catch (e: Exception) {

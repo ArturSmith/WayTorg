@@ -1,11 +1,14 @@
 package com.way_torg.myapplication.presentation.root
 
 import android.os.Parcelable
+import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.popTo
+import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.decompose.value.Value
@@ -49,6 +52,9 @@ class DefaultRootComponent @AssistedInject constructor(
                     },
                     onProductSaved = {
                         navigation.pop()
+                    },
+                    onNavigateHome = {
+                        navigation.popTo(0)
                     }
                 )
                 RootComponent.Child.CreateProduct(component = component)

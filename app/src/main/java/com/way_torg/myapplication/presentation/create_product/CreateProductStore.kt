@@ -56,7 +56,8 @@ interface CreateProductStore :
 
 
     sealed interface Label {
-        data object OnNavigateBack : Label
+        data object ProductCreated : Label
+        data object ProductDeleted : Label
     }
 
 

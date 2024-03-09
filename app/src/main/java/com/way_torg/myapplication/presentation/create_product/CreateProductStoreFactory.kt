@@ -148,7 +148,7 @@ class CreateProductStoreFactory @Inject constructor(
                             } else {
                                 dispatch(Msg.Success)
                                 delay(500)
-                                publish(CreateProductStore.Label.OnNavigateBack)
+                                publish(CreateProductStore.Label.ProductCreated)
                             }
                         }
                     }
@@ -190,7 +190,7 @@ class CreateProductStoreFactory @Inject constructor(
                     scope.launch {
                         dispatch(Msg.Loading)
                         deleteProductUseCase(state.getProduct()!!)
-                        publish(CreateProductStore.Label.OnNavigateBack)
+                        publish(CreateProductStore.Label.ProductDeleted)
                     }
                 }
             }

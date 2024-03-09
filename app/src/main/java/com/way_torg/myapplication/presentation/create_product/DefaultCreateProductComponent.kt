@@ -21,6 +21,7 @@ class DefaultCreateProductComponent @AssistedInject constructor(
     @Assisted("componentContext") componentContext: ComponentContext,
     @Assisted("onProductSaved") private val onProductSaved: () -> Unit,
     @Assisted("onClickBack") private val onClickBack: () -> Unit,
+    @Assisted("onNavigateHome") private val onNavigateHome: () -> Unit
 ) : CreateProductComponent, ComponentContext by componentContext {
 
     private val store = instanceKeeper.getStore { storeFactory.create(product) }
@@ -33,8 +34,12 @@ class DefaultCreateProductComponent @AssistedInject constructor(
         componentScope().launch {
             store.labels.collect {
                 when (it) {
-                    CreateProductStore.Label.OnNavigateBack -> {
+                    CreateProductStore.Label.ProductCreated -> {
                         onProductSaved.invoke()
+                    }
+
+                    CreateProductStore.Label.ProductDeleted -> {
+                        onNavigateHome.invoke()
                     }
                 }
             }
@@ -96,6 +101,7 @@ class DefaultCreateProductComponent @AssistedInject constructor(
             @Assisted("componentContext") componentContext: ComponentContext,
             @Assisted("onProductSaved") onProductSaved: () -> Unit,
             @Assisted("onClickBack") onClickBack: () -> Unit,
+            @Assisted("onNavigateHome") onNavigateHome: () -> Unit
         ): DefaultCreateProductComponent
     }
 }
