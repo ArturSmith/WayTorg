@@ -479,7 +479,7 @@ private fun annotatedTotalPriceString(model: BasketStore.State.Initial): Annotat
             withStyle(style = SpanStyle(color = Color.Red)) {
                 append(totalDiscount)
             }
-            append(" ")
+            append(" = ")
             withStyle(style = SpanStyle()) {
                 append(totalPrice)
             }

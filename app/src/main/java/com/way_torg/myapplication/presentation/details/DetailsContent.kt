@@ -101,9 +101,7 @@ fun DetailsContent(component: DetailsComponent) {
                     }
                     Spacer(Modifier.width(20.dp))
                 },
-                title = {
-                    Text(text = model.product.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                },
+                title = {},
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
@@ -187,6 +185,11 @@ fun DetailsContent(component: DetailsComponent) {
                         modifier = Modifier.padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        Text(
+                            text = model.product.name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Row {
                             Text("${stringResource(R.string.price)}: ")
                             Text(text = priceAnnotatedString(model.product))

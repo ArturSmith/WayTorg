@@ -313,7 +313,6 @@ private fun ProductItem(
                 Row {
                     Text(text = "${stringResource(R.string.total_price)}: ")
                     Text(text = buildAnnotatedString {
-
                         if (item.getDiscount() > 0.0) {
                             append(stringHandler.strTotalPriceWithoutDiscount)
                             withStyle(style = SpanStyle(color = Color.Red)) {

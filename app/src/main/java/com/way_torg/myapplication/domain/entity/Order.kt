@@ -13,10 +13,10 @@ data class Order(
     val orderDate: Long,
     val status: OrderStatus = OrderStatus.UNPAID,
 ) : Parcelable {
-    fun totalQuantityOfProducts() = products.map { it.quantity }.sum()
-    fun totalPriceWithDiscount() = products.map { it.getTotalPriceWithDiscount() }.sum()
-    fun totalPriceWithoutDiscount() = products.map { it.getTotalPriceWithoutDiscount() }.sum()
-    fun totalDiscount() = products.map { it.getDiscount() }.sum()
+    fun totalQuantityOfProducts() = products.sumOf { it.quantity }
+    fun totalPriceWithDiscount() = products.sumOf { it.getTotalPriceWithDiscount() }
+    fun totalPriceWithoutDiscount() = products.sumOf { it.getTotalPriceWithoutDiscount() }
+    fun totalDiscount() = products.sumOf { it.getDiscount() }
     fun averageDiscountInPercent() = this.totalDiscount() * 100 / totalPriceWithoutDiscount()
 
 
