@@ -16,7 +16,7 @@
     <string name="almost_sold_out">Почти продано</string>
     <string name="add_to_basket">Добавить в корзину</string>
     <string name="rating">Рейтинг</string>
-    <string name="no_selected_pictures">Нет выбранных фотографий</string>
+    <string name="select_new_pictures">Выбрать фотографии</string>
     <string name="long_click_to_delete_pic">Долгое нажатие для удаления картинки</string>
     <string name="more">Больше</string>
     <string name="less">Меньше</string>
@@ -45,4 +45,6 @@
     <string name="logout">Разлогин</string>
     <string name="enter_password">Введите пароль</string>
     <string name="in_basket">в корзине</string>
+    <string name="you_can_only_delete_all_pictures">Можно лишь удалить все фотографии</string>
+    <string name="delete_all_pictures">Удалить</string>
 </resources>

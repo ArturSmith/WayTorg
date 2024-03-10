@@ -15,7 +15,7 @@
     <string name="almost_sold_out">Almost sold out</string>
     <string name="add_to_basket">Add to basket</string>
     <string name="rating">Rating</string>
-    <string name="no_selected_pictures">Do not have any selected pictures</string>
+    <string name="select_new_pictures">Select new pictures</string>
     <string name="long_click_to_delete_pic">Long click to delete picture</string>
     <string name="more">More</string>
     <string name="less">Less</string>
@@ -44,4 +44,7 @@
     <string name="logout">logout</string>
     <string name="enter_password">Enter password</string>
     <string name="in_basket">In basket</string>
+    <string name="you_can_only_delete_all_pictures">You can only delete all pictures</string>
+
+    <string name="delete_all_pictures">Delete all pictures</string>
 </resources>

@@ -45,6 +45,7 @@ interface CreateProductStore :
             )
 
             fun getProduct() = product
+            fun getProductPictures() = product?.pictures?.values?.toList() ?: emptyList()
             fun isEditing() = product != null
 
         }

@@ -28,11 +28,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowCircleRight
-import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -45,6 +44,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -55,7 +55,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,9 +67,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Category
-import com.way_torg.myapplication.extensions.asInitial
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateProductContent(
     component: CreateProductComponent
@@ -105,10 +105,11 @@ private fun InitialState(
     state: CreateProductStore.State.Initial,
     component: CreateProductComponent
 ) {
+    val title = if (state.isEditing()) R.string.edit else R.string.create_product
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = stringResource(R.string.create_product)) },
+                title = { Text(text = stringResource(title)) },
                 navigationIcon = {
                     IconButton(onClick = {
                         component.onClickBack()
@@ -147,16 +148,8 @@ private fun InitialState(
                 onValueChange = {
                     component.onSetName(it)
                 },
-                isError = state.isNameError
-            )
-            OutlinedTextField(
-                value = state.description,
-                label = { Text(stringResource(R.string.description)) },
-                onValueChange = {
-                    component.onSetDescription(it)
-                },
-                modifier = Modifier.height(100.dp).widthIn(max = TextFieldDefaults.MinWidth),
-                isError = state.isDescriptionError
+                isError = state.isNameError,
+                modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth),
             )
             OutlinedTextField(
                 value = state.count,
@@ -202,12 +195,44 @@ private fun InitialState(
                 onSelected = { component.onCategorySelected(it) },
                 onSetNewCategory = { component.onSetNewCategory(it) }
             )
+            OutlinedTextField(
+                value = state.description,
+                label = { Text(stringResource(R.string.description)) },
+                onValueChange = {
+                    component.onSetDescription(it)
+                },
+                modifier = Modifier.height(100.dp).widthIn(max = TextFieldDefaults.MinWidth),
+                isError = state.isDescriptionError
+            )
+            if (state.isEditing() && state.getProductPictures().isNotEmpty()) {
+                Text(
+                    "**${stringResource(R.string.you_can_only_delete_all_pictures)}",
+                    textAlign = TextAlign.Center,
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.width(TextFieldDefaults.MinWidth)
+                )
+                TextButton(
+                    onClick = {},
+                    modifier = Modifier
+                        .width(TextFieldDefaults.MinWidth)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(1.dp))
+                ) {
+                    Text(
+                        text = stringResource(R.string.delete_all_pictures),
+                        fontSize = 12.sp
+                    )
+                }
+                ExistingPictures(state.getProductPictures())
+            }
             if (state.pictures.isNotEmpty()) {
                 Text(
                     stringResource(R.string.long_click_to_delete_pic),
                     textAlign = TextAlign.Center,
                     fontSize = 18.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    modifier = Modifier.width(TextFieldDefaults.MinWidth)
                 )
                 LazyRow(
                     modifier = Modifier.padding(horizontal = 20.dp),
@@ -231,24 +256,28 @@ private fun InitialState(
                 }
             } else {
                 Text(
-                    stringResource(R.string.no_selected_pictures),
+                    stringResource(R.string.select_new_pictures),
                     textAlign = TextAlign.Center,
                     fontSize = 18.sp,
                     color = Color.Gray
                 )
             }
+            if (state.isEditing()) {
+
+            }
             TakePicturesFromGalery {
                 component.onClickAddPictures(it)
             }
             Spacer(Modifier.weight(1f))
-            OutlinedButton(
+            Button(
                 onClick = {
                     component.onClickCreate()
                 },
+                modifier = Modifier.width(TextFieldDefaults.MinWidth)
             ) {
                 Text(
                     if (state.isEditing()) stringResource(R.string.edit) else stringResource(R.string.create),
-                    color = Color.Black
+                    color = Color.White
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -275,6 +304,25 @@ private fun SuccessState(state: CreateProductStore.State) {
         tint = Color.Green,
         modifier = Modifier.size(50.dp)
     )
+}
+
+@Composable
+private fun ExistingPictures(pictures: List<String>) {
+    LazyRow(
+        modifier = Modifier.padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        items(
+            items = pictures
+        ) {
+            AsyncImage(
+                model = it,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(200.dp)
+            )
+        }
+    }
 }
 
 @Composable
