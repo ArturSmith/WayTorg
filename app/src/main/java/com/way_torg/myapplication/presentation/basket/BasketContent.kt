@@ -326,7 +326,8 @@ private fun BottomSheet(
                 item {
                     Text(
                         stringResource(R.string.choose_one_of_addresses),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.width(TextFieldDefaults.MinWidth)
                     )
                 }
                 itemsIndexed(

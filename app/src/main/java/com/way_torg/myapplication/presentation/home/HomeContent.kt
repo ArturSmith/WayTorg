@@ -1,6 +1,5 @@
 package com.way_torg.myapplication.presentation.home
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,13 +23,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilterChip
@@ -44,9 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,7 +51,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.way_torg.myapplication.R
@@ -69,7 +66,7 @@ fun HomeContent(
     component: HomeComponent
 ) {
     val model by component.model.collectAsState()
-
+    val context = LocalContext.current
     val mainAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     if (model.isAuthDialogVisible) {
@@ -121,9 +118,12 @@ fun HomeContent(
                             )
                         }
                         IconButton({
-                            TODO()
+                            component.changeLocale(context)
                         }) {
-                            Icon(Icons.Filled.Language, contentDescription = null)
+                            Text(
+                                model.currentLocale,
+                                fontWeight = FontWeight.ExtraBold
+                            )
                         }
                     }
                 },

@@ -143,7 +143,7 @@ private fun InitialState(
         ) {
             OutlinedTextField(
                 value = state.name,
-                placeholder = { Text(stringResource(R.string.name)) },
+                label = { Text(stringResource(R.string.name)) },
                 onValueChange = {
                     component.onSetName(it)
                 },
@@ -151,7 +151,7 @@ private fun InitialState(
             )
             OutlinedTextField(
                 value = state.description,
-                placeholder = { Text(stringResource(R.string.description)) },
+                label = { Text(stringResource(R.string.description)) },
                 onValueChange = {
                     component.onSetDescription(it)
                 },
@@ -160,7 +160,7 @@ private fun InitialState(
             )
             OutlinedTextField(
                 value = state.count,
-                placeholder = { Text(stringResource(R.string.count)) },
+                label = { Text(stringResource(R.string.count)) },
                 onValueChange = {
                     component.onSetCount(it)
                 },
@@ -171,7 +171,7 @@ private fun InitialState(
             )
             OutlinedTextField(
                 value = state.price,
-                placeholder = { Text(stringResource(R.string.price)) },
+                label = { Text(stringResource(R.string.price)) },
                 onValueChange = {
                     component.onSetPrice(it)
                 },
@@ -182,7 +182,7 @@ private fun InitialState(
             )
             OutlinedTextField(
                 value = state.discount,
-                placeholder = { Text(stringResource(R.string.discount)) },
+                label = { Text(stringResource(R.string.discount)) },
                 onValueChange = {
                     component.onSetDiscount(it)
                 },

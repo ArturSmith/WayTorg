@@ -1,6 +1,6 @@
 package com.way_torg.myapplication.presentation.order
 
-import android.util.Log
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlusOne
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -57,6 +56,8 @@ import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Order
 import com.way_torg.myapplication.domain.entity.OrderStatus
 import com.way_torg.myapplication.domain.entity.ProductWrapper
+import com.way_torg.myapplication.domain.entity.OrderStringHandler
+import com.way_torg.myapplication.domain.entity.ProductStringHandler
 import com.way_torg.myapplication.extensions.convertToDataFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,6 +98,7 @@ fun ChatContent(
                 containerColor = Color.White
             ) {
                 model.tabs.forEachIndexed { index, status ->
+                    val isSelected = index == model.selectedTab.index
                     val text = when (status) {
                         OrderStatus.UNPAID -> stringResource(R.string.unpaid)
                         OrderStatus.PAID -> stringResource(R.string.paid)
@@ -104,7 +106,7 @@ fun ChatContent(
                         OrderStatus.DELAYED -> stringResource(R.string.delayed)
                     }
                     Tab(
-                        selected = index == model.selectedTab.index,
+                        selected = isSelected,
                         onClick = {
                             component.onClickTab(status)
                         },
@@ -146,7 +148,7 @@ fun ChatContent(
 }
 
 @Composable
-private fun OrderItem(order: Order, onClick: (order:Order) -> Unit) {
+private fun OrderItem(order: Order, onClick: (order: Order) -> Unit) {
     val stateItemColor = when (order.status) {
         OrderStatus.UNPAID -> Color.Red
         OrderStatus.PAID -> Color.Green
@@ -159,7 +161,8 @@ private fun OrderItem(order: Order, onClick: (order:Order) -> Unit) {
             .fillMaxWidth()
             .padding(10.dp)
             .clickable {
-                onClick(order) },
+                onClick(order)
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
@@ -200,6 +203,7 @@ private fun OrderDetailsModalSheet(
     component: OrdersComponent
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val orderStringHandler = OrderStringHandler(order)
     ModalBottomSheet(
         onDismissRequest = { component.closeModalSheet() },
         sheetState = sheetState,
@@ -239,13 +243,13 @@ private fun OrderDetailsModalSheet(
             }
             item {
                 Text(
-                    text = "${stringResource(R.string.total_price)}: ${order.totalPriceWithDiscount()}",
+                    text = "${stringResource(R.string.total_price)}: ${orderStringHandler.strTotalPriceWithDiscount}",
                     fontWeight = FontWeight.Bold
                 )
             }
             item {
                 Text(
-                    text = "${stringResource(R.string.total_discount)}: ${order.totalDiscount()} (${
+                    text = "${stringResource(R.string.total_discount)}: ${orderStringHandler.strTotalDiscount} (${
                         order.averageDiscountInPercent().toInt()
                     }%)",
                     fontWeight = FontWeight.Bold
@@ -290,6 +294,7 @@ private fun ProductItem(
     decrease: () -> Unit,
     delete: () -> Unit
 ) {
+    val stringHandler = ProductStringHandler(item)
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -302,20 +307,23 @@ private fun ProductItem(
                 modifier = Modifier.fillMaxHeight().weight(1f)
             ) {
                 Text(text = "${stringResource(R.string.serial_number)}: ${item.product.serialNumber}")
-                Text(text = item.product.name)
+                Text(text = item.product.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = "${stringResource(R.string.quantity)}: ${item.quantity}")
                 Spacer(Modifier)
                 Row {
                     Text(text = "${stringResource(R.string.total_price)}: ")
                     Text(text = buildAnnotatedString {
+
                         if (item.getDiscount() > 0.0) {
-                            append(item.getTotalPriceWithoutDiscount().toString())
+                            append(stringHandler.strTotalPriceWithoutDiscount)
                             withStyle(style = SpanStyle(color = Color.Red)) {
-                                append("- ${item.getDiscount()} ")
+                                append(" - ")
+                                append(stringHandler.strTotalDiscount)
                             }
-                            append("= ${item.getTotalPriceWithDiscount()}")
+                            append(" = ")
+                            append(stringHandler.strTotalPrice)
                         } else {
-                            append(item.getTotalPriceWithoutDiscount().toString())
+                            append(stringHandler.strTotalPriceWithoutDiscount)
                         }
                     })
                 }

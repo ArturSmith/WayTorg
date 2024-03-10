@@ -1,5 +1,6 @@
 package com.way_torg.myapplication.presentation.home
 
+import android.content.Context
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
@@ -32,6 +33,7 @@ class DefaultHomeComponent @AssistedInject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<HomeStore.State>
         get() = store.stateFlow
+
 
 
     override fun onClickProduct(product: Product) {
@@ -76,6 +78,10 @@ class DefaultHomeComponent @AssistedInject constructor(
 
     override fun onPasswordValueChangeListener(value: String) {
         store.accept(HomeStore.Intent.OnPasswordValueChangeListener(value))
+    }
+
+    override fun changeLocale(context: Context) {
+        store.accept(HomeStore.Intent.OnChangeLocale(context))
     }
 
     @AssistedFactory

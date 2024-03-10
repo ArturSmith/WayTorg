@@ -1,5 +1,6 @@
 package com.way_torg.myapplication.presentation.home
 
+import android.content.Context
 import com.arkivanov.mvikotlin.core.store.Store
 import com.way_torg.myapplication.domain.entity.Category
 import com.way_torg.myapplication.domain.entity.Product
@@ -17,7 +18,8 @@ interface HomeStore : Store<HomeStore.Intent, HomeStore.State, HomeStore.Label> 
         val password: String,
         val isAuthDialogVisible: Boolean,
         val authState: Boolean,
-        val countOfUnpaidOrders:Int
+        val countOfUnpaidOrders:Int,
+        val currentLocale:String
     ) {
         data class ProductItem(
             val product: Product,
@@ -35,5 +37,6 @@ interface HomeStore : Store<HomeStore.Intent, HomeStore.State, HomeStore.Label> 
         data object ChangeAuthDialogVisibility : Intent
         data class OnPasswordValueChangeListener(val value: String) : Intent
         data object OnClickLogin : Intent
+        data class OnChangeLocale(val context: Context):Intent
     }
 }

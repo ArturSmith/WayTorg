@@ -3,6 +3,7 @@ package com.way_torg.myapplication.domain.entity
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.IgnoredOnParcel
 
 @Parcelize
 data class Order(
@@ -17,6 +18,7 @@ data class Order(
     fun totalPriceWithoutDiscount() = products.map { it.getTotalPriceWithoutDiscount() }.sum()
     fun totalDiscount() = products.map { it.getDiscount() }.sum()
     fun averageDiscountInPercent() = this.totalDiscount() * 100 / totalPriceWithoutDiscount()
+
 
     fun increaseQuantityOfProduct(productId: String): Order {
         val newList =

@@ -24,14 +24,14 @@
     <string name="basket">Корзина</string>
     <string name="total_price">Итоговая цена</string>
     <string name="total_discount">Итоговая скидка</string>
-    <string name="order">Заказ</string>
+    <string name="order">Заказать</string>
     <string name="list_is_empty">Список пуст</string>
     <string name="address">Адрес</string>
     <string name="contact">Контакты</string>
     <string name="message">Сообщение</string>
     <string name="contact_warning">Пожалуйста, введите какой-либо ваш контакт: email или номер</string>
     <string name="items">Продукты</string>
-    <string name="choose_one_of_addresses">Выберите один из:</string>
+    <string name="choose_one_of_addresses">Выберите один из предложенных или создайте новый адрес:</string>
     <string name="success_order">Ваш заказ успешно отправлен</string>
     <string name="orders">Заказы</string>
     <string name="unpaid">неоплачено</string>

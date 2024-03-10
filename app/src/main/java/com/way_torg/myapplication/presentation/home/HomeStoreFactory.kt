@@ -12,7 +12,9 @@ import com.way_torg.myapplication.domain.use_case.GetAllCategoriesFromRemoteDbUs
 import com.way_torg.myapplication.domain.use_case.GetAllProductsUseCase
 import com.way_torg.myapplication.domain.use_case.GetAllSelectedCategoriesFromLocalDbUseCase
 import com.way_torg.myapplication.domain.use_case.GetCountOfUnpaidOrdersUseCase
+import com.way_torg.myapplication.domain.use_case.GetLocaleUseCase
 import com.way_torg.myapplication.domain.use_case.GetProductsFromBasketUseCase
+import com.way_torg.myapplication.domain.use_case.SaveLocaleUseCase
 import com.way_torg.myapplication.domain.use_case.SelectCategoryUseCase
 import com.way_torg.myapplication.domain.use_case.SignInUseCase
 import com.way_torg.myapplication.domain.use_case.SignOutUseCase
@@ -23,7 +25,6 @@ import com.way_torg.myapplication.extensions.filterByCategory
 import com.way_torg.myapplication.extensions.filterBySelectedCategories
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +40,9 @@ class HomeStoreFactory @Inject constructor(
     private val signInUseCase: SignInUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val getProductsFromBasketUseCase: GetProductsFromBasketUseCase,
-    private val getCountOfUnpaidOrdersUseCase: GetCountOfUnpaidOrdersUseCase
+    private val getCountOfUnpaidOrdersUseCase: GetCountOfUnpaidOrdersUseCase,
+    private val saveLocaleUseCase: SaveLocaleUseCase,
+    private val getLocaleUseCase: GetLocaleUseCase,
 ) {
 
     fun create(): HomeStore =
@@ -57,7 +60,8 @@ class HomeStoreFactory @Inject constructor(
                     isAuthDialogVisible = false,
                     authState = false,
                     password = "",
-                    countOfUnpaidOrders = 0
+                    countOfUnpaidOrders = 0,
+                    currentLocale = ""
                 ),
                 reducer = ReducerImpl,
                 executorFactory = ::ExecutorImpl,
@@ -71,6 +75,7 @@ class HomeStoreFactory @Inject constructor(
         data class ProductsFromBasketLoaded(val products: List<String>) : Action
         data class AuthStateObserved(val authState: Boolean) : Action
         data class CountOfUnpaidOrdersLoaded(val count: Int) : Action
+        data class DefaultLocaleLoaded(val locale: String) : Action
     }
 
     private sealed interface Msg {
@@ -87,6 +92,7 @@ class HomeStoreFactory @Inject constructor(
         data class SetAuthState(val authState: Boolean) : Msg
         data class SetPasswordValue(val value: String) : Msg
         data class SetCountOfUnpaidOrders(val count: Int) : Msg
+        data class SetCurrentLocale(val locale: String) : Msg
 
     }
 
@@ -128,6 +134,12 @@ class HomeStoreFactory @Inject constructor(
 
                 is Action.CountOfUnpaidOrdersLoaded -> {
                     dispatch(Msg.SetCountOfUnpaidOrders(action.count))
+                }
+
+                is Action.DefaultLocaleLoaded -> {
+                    val currentLocale = action.locale
+                    val reversedCurrentLocale = if (currentLocale == "ru") "EN" else "RU"
+                    dispatch(Msg.SetCurrentLocale(reversedCurrentLocale))
                 }
             }
         }
@@ -180,6 +192,12 @@ class HomeStoreFactory @Inject constructor(
 
                 is HomeStore.Intent.OnPasswordValueChangeListener -> {
                     dispatch(Msg.SetPasswordValue(intent.value))
+                }
+
+                is HomeStore.Intent.OnChangeLocale -> {
+                    scope.launch{
+                       saveLocaleUseCase()
+                    }
                 }
             }
         }
@@ -253,6 +271,12 @@ class HomeStoreFactory @Inject constructor(
                     countOfUnpaidOrders = msg.count
                 )
             }
+
+            is Msg.SetCurrentLocale -> {
+                copy(
+                    currentLocale = msg.locale
+                )
+            }
         }
     }
 
@@ -288,6 +312,11 @@ class HomeStoreFactory @Inject constructor(
             scope.launch {
                 getCountOfUnpaidOrdersUseCase().collect {
                     dispatch(Action.CountOfUnpaidOrdersLoaded(it))
+                }
+            }
+            scope.launch {
+                getLocaleUseCase().collect {
+                    dispatch(Action.DefaultLocaleLoaded(it))
                 }
             }
         }
