@@ -166,11 +166,21 @@ fun HomeContent(
         },
         floatingActionButtonPosition = FabPosition.End
     ) {
-        Content(model, component, it)
+        if (model.filteredProducts.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = stringResource(R.string.list_is_empty))
+            }
+        } else {
+            Content(model, component, it)
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
     model: HomeStore.State,
