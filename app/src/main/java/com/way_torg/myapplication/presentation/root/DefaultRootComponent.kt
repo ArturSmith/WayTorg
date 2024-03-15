@@ -18,17 +18,20 @@ import com.way_torg.myapplication.presentation.order.DefaultOrdersComponent
 import com.way_torg.myapplication.presentation.create_product.DefaultCreateProductComponent
 import com.way_torg.myapplication.presentation.details.DefaultDetailsComponent
 import com.way_torg.myapplication.presentation.home.DefaultHomeComponent
+import com.way_torg.myapplication.presentation.logo.DefaultLogoComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.android.parcel.Parcelize
 
+@Suppress("DEPRECATED_ANNOTATION")
 class DefaultRootComponent @AssistedInject constructor(
     private val homeComponentFactory: DefaultHomeComponent.Factory,
     private val createProductComponentFactory: DefaultCreateProductComponent.Factory,
     private val detailsComponentFactory: DefaultDetailsComponent.Factory,
     private val basketComponentFactory: DefaultBasketComponent.Factory,
     private val chatComponentFactory: DefaultOrdersComponent.Factory,
+    private val logoComponentFactory: DefaultLogoComponent.Factory,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RootComponent, ComponentContext by componentContext {
 
@@ -36,7 +39,7 @@ class DefaultRootComponent @AssistedInject constructor(
 
     override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
-        initialConfiguration = Config.Home,
+        initialConfiguration = Config.Logo,
         handleBackButton = true,
         childFactory = ::child
     )
@@ -121,6 +124,15 @@ class DefaultRootComponent @AssistedInject constructor(
                 )
                 RootComponent.Child.Chat(component = component)
             }
+
+            Config.Logo -> {
+                val component = logoComponentFactory.create(
+                    componentContext = componentContext
+                ) {
+                    navigation.replaceCurrent(Config.Home)
+                }
+                RootComponent.Child.Logo(component)
+            }
         }
     }
 
@@ -140,6 +152,9 @@ class DefaultRootComponent @AssistedInject constructor(
 
         @Parcelize
         data object Chat : Config
+
+        @Parcelize
+        data object Logo : Config
     }
 
     @AssistedFactory

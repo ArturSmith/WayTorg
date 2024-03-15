@@ -33,6 +33,7 @@ import com.way_torg.myapplication.presentation.order.ChatContent
 import com.way_torg.myapplication.presentation.create_product.CreateProductContent
 import com.way_torg.myapplication.presentation.details.DetailsContent
 import com.way_torg.myapplication.presentation.home.HomeContent
+import com.way_torg.myapplication.presentation.logo.LogoContent
 import com.way_torg.myapplication.presentation.ui.theme.MyApplicationTheme
 
 
@@ -72,6 +73,10 @@ private fun Content(component: DefaultRootComponent, modifier: Modifier) {
                     is RootComponent.Child.Chat -> {
                         slide()
                     }
+
+                    is RootComponent.Child.Logo -> {
+                        fade()
+                    }
                 }
             }
         ) {
@@ -100,6 +105,10 @@ private fun Content(component: DefaultRootComponent, modifier: Modifier) {
 
                 is RootComponent.Child.Chat -> {
                     ChatContent(component = instance.component)
+                }
+
+                is RootComponent.Child.Logo -> {
+                    LogoContent(instance.component)
                 }
             }
         }
