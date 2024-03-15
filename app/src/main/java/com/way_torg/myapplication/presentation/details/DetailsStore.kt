@@ -109,7 +109,7 @@ class DetailsStoreFactory @Inject constructor(
                     val filteredProducts = action.products.toMutableList()
                     filteredProducts.remove(state.product)
                     val newList = filteredProducts
-                        .sortedBy { it.category == state.product.category }
+                        .sortedByDescending { it.category == state.product.category }
                     dispatch(Msg.SetProducts(newList))
                 }
 
