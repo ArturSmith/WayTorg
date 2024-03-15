@@ -17,6 +17,7 @@ interface OrdersComponent {
     fun onClickDecreaseQuantity(order: Order, product: ProductWrapper)
     fun onClickDeleteProduct(order: Order, product: ProductWrapper)
     fun onClickStatus(order: Order, status: OrderStatus)
+    fun deleteOrder(order: Order)
 
 }
 

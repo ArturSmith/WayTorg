@@ -39,6 +39,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +54,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.way_torg.myapplication.R
 import com.way_torg.myapplication.domain.entity.Order
@@ -131,9 +135,10 @@ fun ChatContent(
                 itemsIndexed(
                     items = model.selectedOrders
                 ) { _, item ->
-                    OrderItem(item) {
-                        component.onClickOrder(it)
-                    }
+                    OrderItem(
+                        order = item,
+                        onClick = { component.onClickOrder(it) },
+                        delete = { component.deleteOrder(it) })
                 }
             }
             if (model.showModalSheet != null) {
@@ -148,12 +153,38 @@ fun ChatContent(
 }
 
 @Composable
-private fun OrderItem(order: Order, onClick: (order: Order) -> Unit) {
+private fun OrderItem(
+    order: Order,
+    onClick: (order: Order) -> Unit,
+    delete: (order: Order) -> Unit
+) {
     val stateItemColor = when (order.status) {
         OrderStatus.UNPAID -> Color.Red
         OrderStatus.PAID -> Color.Green
         OrderStatus.CANCELED -> Color.Gray
         OrderStatus.DELAYED -> Color.Gray
+    }
+
+    var confirmDeletingDialog by remember { mutableStateOf(false) }
+
+    if (confirmDeletingDialog) {
+        Dialog(
+            onDismissRequest = {
+                confirmDeletingDialog = false
+            }
+        ) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                TextButton(
+                    modifier = Modifier.padding(20.dp),
+                    onClick = {
+                        delete(order)
+                    }) {
+                    Text(stringResource(R.string.confirm_deleting), color = Color.Red)
+                }
+            }
+        }
     }
 
     Card(
@@ -166,15 +197,44 @@ private fun OrderItem(order: Order, onClick: (order: Order) -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp),
+        ConstraintLayout(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(text = order.orderDate.convertToDataFormat(), color = Color.Gray)
-            Text(text = order.customerInfo.name)
-            Text(text = order.customerInfo.address, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            StatusItem(order.status, stateItemColor)
+            val (mainInfo, deleteButton) = createRefs()
+
+            Column(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .constrainAs(mainInfo) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    },
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Text(text = order.orderDate.convertToDataFormat(), color = Color.Gray)
+                Text(text = order.customerInfo.name)
+                Text(
+                    text = order.customerInfo.address,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                StatusItem(order.status, stateItemColor)
+            }
+
+            TextButton(
+                modifier = Modifier
+                    .constrainAs(deleteButton) {
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
+                        end.linkTo(parent.end, margin = 5.dp)
+                    },
+                onClick = {
+                    confirmDeletingDialog = !confirmDeletingDialog
+                }
+            ) {
+                Text(stringResource(R.string.delete_order), color = Color.Red)
+            }
         }
+
     }
 }
 

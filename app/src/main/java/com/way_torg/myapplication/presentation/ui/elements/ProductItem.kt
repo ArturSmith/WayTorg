@@ -95,6 +95,7 @@ private fun PictureHeader(product: Product, onClickProduct: () -> Unit) {
             product.pictures.ifNotEmpty {
                 SubcomposeAsyncImage(
                     modifier = Modifier
+                        .padding(5.dp)
                         .clip(shape = RoundedCornerShape(10.dp))
                         .align(Alignment.Center),
                     model = product.pictures.values.first(),

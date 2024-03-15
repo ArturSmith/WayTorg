@@ -108,7 +108,9 @@ class DetailsStoreFactory @Inject constructor(
                 is Action.ProductsLoaded -> {
                     val filteredProducts = action.products.toMutableList()
                     filteredProducts.remove(state.product)
-                    dispatch(Msg.SetProducts(filteredProducts.toList()))
+                    val newList = filteredProducts
+                        .sortedBy { it.category == state.product.category }
+                    dispatch(Msg.SetProducts(newList))
                 }
 
                 is Action.AuthStateLoaded -> {

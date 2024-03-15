@@ -45,6 +45,7 @@
     <string name="enter_password">Enter password</string>
     <string name="in_basket">In basket</string>
     <string name="you_can_only_delete_all_pictures">You can only delete all pictures</string>
-
+    <string name="delete_order">Delete order</string>
+    <string name="confirm_deleting">Confirm deleting</string>
     <string name="delete_all_pictures">Delete all pictures</string>
 </resources>

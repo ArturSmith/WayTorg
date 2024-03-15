@@ -54,6 +54,10 @@ class DefaultOrdersComponent @AssistedInject constructor(
         store.accept(OrdersStore.Intent.OnClickDeleteProduct(order, product))
     }
 
+    override fun deleteOrder(order: Order) {
+        store.accept(OrdersStore.Intent.OnClickDeleteOrder(order))
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(

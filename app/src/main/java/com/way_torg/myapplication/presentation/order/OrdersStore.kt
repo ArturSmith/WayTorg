@@ -38,6 +38,7 @@ interface OrdersStore : Store<Intent, State, Label> {
         data class OnClickIncreaseQuantity(val order: Order, val product: ProductWrapper) : Intent
         data class OnClickDecreaseQuantity(val order: Order, val product: ProductWrapper) : Intent
         data class OnClickDeleteProduct(val order: Order, val product: ProductWrapper) : Intent
+        data class OnClickDeleteOrder(val order: Order) : Intent
     }
 
     sealed interface Label
@@ -149,6 +150,12 @@ class OrdersStoreFactory @Inject constructor(
                             intent.order.increaseQuantityOfProduct(intent.product.product.id)
                         editOrderUseCase(newOrder)
                         dispatch(Msg.ShowModalSheet(newOrder))
+                    }
+                }
+
+                is Intent.OnClickDeleteOrder -> {
+                    scope.launch {
+                        deleteOrderUseCase(intent.order.id)
                     }
                 }
             }

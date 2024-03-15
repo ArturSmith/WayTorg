@@ -39,7 +39,7 @@
     <string name="canceled">отмененные</string>
     <string name="delayed">отложенные</string>
     <string name="serial_number">Серийный номер</string>
-    <string name="total_quantity_of_products">Итоговая цена всех продуктов</string>
+    <string name="total_quantity_of_products">Итоговое количество всех продуктов</string>
     <string name="customer">Клиент</string>
     <string name="login">Логин</string>
     <string name="logout">Разлогин</string>
@@ -47,4 +47,6 @@
     <string name="in_basket">в корзине</string>
     <string name="you_can_only_delete_all_pictures">Можно лишь удалить все фотографии</string>
     <string name="delete_all_pictures">Удалить</string>
+    <string name="delete_order">Удалить заказ</string>
+    <string name="confirm_deleting">Подтвердить удаление</string>
 </resources>
