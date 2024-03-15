@@ -112,6 +112,12 @@ fun BasketContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InitialState(model: BasketStore.State.Initial, component: BasketComponent) {
+    if (model.isSheetVisible) {
+        BottomSheet(model, component) {
+            component.hideSheet()
+        }
+    }
+
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -152,11 +158,7 @@ private fun InitialState(model: BasketStore.State.Initial, component: BasketComp
                 }
             }
 
-            if (model.isSheetVisible) {
-                BottomSheet(model, component) {
-                    component.hideSheet()
-                }
-            }
+
         } else {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -348,6 +350,7 @@ private fun BottomSheet(
                         )
                     }
                 }
+            }
                 item {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -424,7 +427,6 @@ private fun BottomSheet(
                     }
                     Spacer(Modifier.height(100.dp))
                 }
-            }
         }
     }
 }
