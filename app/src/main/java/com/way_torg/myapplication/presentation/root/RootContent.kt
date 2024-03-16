@@ -75,7 +75,7 @@ private fun Content(component: DefaultRootComponent, modifier: Modifier) {
                     }
 
                     is RootComponent.Child.Logo -> {
-                        fade()
+                        slide()
                     }
                 }
             }
