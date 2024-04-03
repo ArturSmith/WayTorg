@@ -45,6 +45,7 @@ interface DataModule {
     fun bindsLocaleRepository(repository: LocaleRepositoryImpl):LocaleRepository
 
 
+
     companion object {
         @[ApplicationScope Provides]
         fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()

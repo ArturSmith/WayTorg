@@ -48,9 +48,9 @@ fun LogoContent(component: LogoComponent) {
     LaunchedEffect(Unit) {
         repeat(2){
             targetValue = 1f
-            delay(1250)
+            delay(750)
             targetValue = 0f
-            delay(1250)
+            delay(750)
         }
         component.navigateToHomeScreen()
     }
@@ -67,13 +67,13 @@ fun LogoContent(component: LogoComponent) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Cube(NewBlue, Icons.Default.ShoppingBag, targetValue, 0)
-                Cube(MainOrange, Icons.Default.ShoppingCart, targetValue, 250)
+                Cube(MainOrange, Icons.Default.ShoppingCart, targetValue, 100)
             }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Cube(Pink, Icons.Default.ShoppingBasket, targetValue, 750)
-                Cube(Color.Green, Icons.Default.Storefront, targetValue, 500)
+                Cube(Pink, Icons.Default.ShoppingBasket, targetValue, 350)
+                Cube(Color.Green, Icons.Default.Storefront, targetValue, 250)
             }
         }
 

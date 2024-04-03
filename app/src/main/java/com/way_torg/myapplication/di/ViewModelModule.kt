@@ -11,5 +11,5 @@ interface ViewModelModule {
     @Binds
     @IntoMap
     @ViewModelKey(MainViewModel::class)
-    fun bindsMailViewModel(viewModel: MainViewModel): ViewModel
+    fun bindsMainViewModel(viewModel: MainViewModel): ViewModel
 }
