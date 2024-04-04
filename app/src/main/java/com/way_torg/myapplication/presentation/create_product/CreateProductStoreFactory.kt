@@ -18,8 +18,8 @@ import com.way_torg.myapplication.domain.use_case.GetAllCategoriesFromRemoteDbUs
 import com.way_torg.myapplication.extensions.addNew
 import com.way_torg.myapplication.extensions.asInitial
 import com.way_torg.myapplication.extensions.getOrCreateCategory
-import com.way_torg.myapplication.extensions.toNewDouble
-import com.way_torg.myapplication.extensions.toNewInt
+import com.way_torg.myapplication.extensions.zeroDoubleIfEmpty
+import com.way_torg.myapplication.extensions.zeroIntIfEmpty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -134,9 +134,9 @@ class CreateProductStoreFactory @Inject constructor(
                                 serialNumber = Random.nextInt(1000000, Int.MAX_VALUE),
                                 category = category,
                                 description = state.description.trim(),
-                                count = state.count.toNewInt(),
-                                price = state.price.toNewDouble(),
-                                discount = state.discount.toNewDouble(),
+                                count = state.count.zeroIntIfEmpty(),
+                                price = state.price.zeroDoubleIfEmpty(),
+                                discount = state.discount.zeroDoubleIfEmpty(),
                                 pictures = state.getProduct()?.pictures ?: emptyMap(),
                                 rating = 0.0
                             )

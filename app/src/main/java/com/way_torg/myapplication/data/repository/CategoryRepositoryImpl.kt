@@ -27,10 +27,11 @@ class CategoryRepositoryImpl @Inject constructor(
     override fun getAllCategoriesFromRemoteDb() = callbackFlow {
         val observer = firestore.collection(CATEGORIES).addSnapshotListener { value, error ->
             if (error != null) return@addSnapshotListener
+            val categories = value
+                ?.documents
+                ?.map { it.toObject<CategoryDto>()?.toEntity() ?: Category.defaultInstance }
+                ?: emptyList()
 
-            val categories = value?.documents?.map {
-                it.toObject<CategoryDto>()?.toEntity() ?: Category.defaultInstance
-            } ?: emptyList()
             trySend(categories)
         }
         awaitClose {
@@ -46,6 +47,7 @@ class CategoryRepositoryImpl @Inject constructor(
         }
 
     override suspend fun createCategory(category: Category): Result<Boolean> {
+        // TODO("Need correct implementation of exception handling ")
         return try {
             firestore.collection(CATEGORIES).document().set(category.toDto()).await()
             Result.success(true)
@@ -55,6 +57,7 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteCategory(id: String): Result<Boolean> {
+        // TODO("Need correct implementation of exception handling ")
         return try {
             firestore.collection(CATEGORIES).document(id).delete().await()
             Result.success(true)
@@ -64,6 +67,7 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun selectCategory(category: Category): Result<Boolean> {
+        // TODO("Need correct implementation of exception handling ")
         return try {
             val model = category.toModel()
             appDao.addCategory(model)
@@ -74,6 +78,7 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun unselectCategory(id: String): Result<Boolean> {
+        // TODO("Need correct implementation of exception handling ")
         return try {
             appDao.deleteCategory(id)
             Result.success(true)

@@ -15,10 +15,8 @@ import java.util.Date
 import java.util.Locale
 
 fun ComponentContext.componentScope(): CoroutineScope = CoroutineScope(
-    Dispatchers.Main.immediate + SupervisorJob()
-).apply {
-    lifecycle.doOnDestroy { cancel() }
-}
+    Dispatchers.Main.immediate + SupervisorJob())
+    .apply { lifecycle.doOnDestroy { cancel() } }
 
 fun CreateProductStore.State.asInitial() = (this as CreateProductStore.State.Initial)
 

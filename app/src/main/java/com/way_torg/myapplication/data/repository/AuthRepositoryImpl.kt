@@ -12,7 +12,8 @@ import javax.inject.Inject
 class AuthRepositoryImpl @Inject constructor(
     private val firebase_auth: FirebaseAuth
 ) : AuthRepository {
-    override suspend fun signIn( password: String): Result<Boolean> {
+    override suspend fun signIn(password: String): Result<Boolean> {
+        // TODO("Need correct implementation of exception handling ")
         return try {
             val user = firebase_auth.signInWithEmailAndPassword(EMAIL, password).await().user
             Result.success(user != null)
@@ -22,9 +23,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun signOut(): Result<Boolean> {
+        // TODO("Need correct implementation of exception handling ")
         return try {
             firebase_auth.signOut()
-            Result.success(true)
+            Result.success(firebase_auth.currentUser == null)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -158,7 +158,6 @@ private fun InitialState(model: BasketStore.State.Initial, component: BasketComp
                 }
             }
 
-
         } else {
             Box(
                 modifier = Modifier.fillMaxSize(),
